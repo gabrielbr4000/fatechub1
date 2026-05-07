@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "350149306943",
+    "project_id": "fatechub-621ee",
+    "storage_bucket": "fatechub-621ee.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:350149306943:android:6255f9edb0d6c20b43a68a",
+        "android_client_info": {
+          "package_name": "com.example.fatechub2"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyB_YaqSUtZn660VrWAYSbKDAA_U0U1k5qY"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
