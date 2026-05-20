@@ -38,7 +38,7 @@ class _TelaMessengerState extends State<TelaMessenger>
   Widget build(BuildContext context) {
     super.build(context);
     return Scaffold(
-      backgroundColor: const Color(0xFFEEEEEE),
+      backgroundColor: Theme.of(context).colorScheme.surfaceContainerLow,
       appBar: const AppBarPadrao(),
       body: _buildBody(),
     );
@@ -61,7 +61,7 @@ class _TelaMessengerState extends State<TelaMessenger>
           child: Text(
             'Acabou as conversas abertas',
             style: TextStyle(
-              color: Colors.grey[600],
+              color: Theme.of(context).colorScheme.onSurfaceVariant,
               fontSize: 14,
             ),
           ),
@@ -76,7 +76,7 @@ class _TelaMessengerState extends State<TelaMessenger>
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 18),
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: Theme.of(context).colorScheme.surface,
           borderRadius: BorderRadius.circular(12),
         ),
         child: Row(
@@ -85,23 +85,23 @@ class _TelaMessengerState extends State<TelaMessenger>
               width: 32,
               height: 32,
               decoration: BoxDecoration(
-                color: Colors.grey[500],
+                color: Theme.of(context).colorScheme.surface,
                 borderRadius: BorderRadius.circular(6),
               ),
-              child: const Icon(Icons.add, color: Colors.white, size: 22),
+              child: Icon(Icons.add, color: Theme.of(context).colorScheme.onSurface, size: 22),
             ),
             const SizedBox(width: 16),
-            const Expanded(
+            Expanded(
               child: Text(
                 'Nova conversa',
                 style: TextStyle(
                   fontSize: 16,
                   fontWeight: FontWeight.w500,
-                  color: Color(0xFF424242),
+                  color: Theme.of(context).colorScheme.onSurface,
                 ),
               ),
             ),
-            Icon(Icons.chevron_right, color: Colors.grey[600], size: 24),
+            Icon(Icons.chevron_right, color: Theme.of(context).colorScheme.onSurface, size: 24),
           ],
         ),
       ),
@@ -124,7 +124,7 @@ class _TelaMessengerState extends State<TelaMessenger>
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: Theme.of(context).colorScheme.surface,
           borderRadius: BorderRadius.circular(12),
         ),
         child: Row(
@@ -136,7 +136,7 @@ class _TelaMessengerState extends State<TelaMessenger>
                 shape: BoxShape.circle,
                 color: conversa['cor'] as Color,
               ),
-              child: const Icon(Icons.person, color: Colors.white, size: 28),
+              child: Icon(Icons.person, color: Theme.of(context).colorScheme.onSurface, size: 28),
             ),
             const SizedBox(width: 14),
             Expanded(
@@ -145,21 +145,21 @@ class _TelaMessengerState extends State<TelaMessenger>
                 children: [
                   Text(
                     conversa['nome'] as String,
-                    style: const TextStyle(
+                    style: TextStyle(
                       fontSize: 15,
                       fontWeight: FontWeight.w600,
-                      color: Color(0xFF212121),
+                      color: Theme.of(context).colorScheme.onSurface,
                     ),
                   ),
                   const SizedBox(height: 2),
                   Text(
                     conversa['mensagem'] as String,
-                    style: TextStyle(fontSize: 13, color: Colors.grey[700]),
+                    style: TextStyle(fontSize: 13, color: Theme.of(context).colorScheme.onSurfaceVariant),
                   ),
                 ],
               ),
             ),
-            Icon(Icons.chevron_right, color: Colors.grey[600], size: 24),
+            Icon(Icons.chevron_right, color: Theme.of(context).colorScheme.onSurface, size: 24),
           ],
         ),
       ),

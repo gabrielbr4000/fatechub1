@@ -1,66 +1,76 @@
 import 'package:fatechub2/view/view_acessibilidade.dart';
 import 'package:fatechub2/view/view_conta.dart';
 import 'package:fatechub2/view/view_login.dart';
+import 'package:fatechub2/controllers/theme_controller.dart';
 import 'package:fatechub2/widgets/app_bar.dart';
 import 'package:flutter/material.dart';
 
 class TelaConfiguracoes extends StatelessWidget {
-  const TelaConfiguracoes({super.key});
-
+  final ThemeController themeController;
+ 
+  const TelaConfiguracoes({super.key, required this.themeController});
+ 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFEEEEEE),
+      backgroundColor: Theme.of(context).colorScheme.surfaceContainerLow,
       appBar: const AppBarPadrao(),
       body: _buildBody(context),
     );
   }
-
+ 
   Widget _buildBody(BuildContext context) {
     return ListView(
       padding: const EdgeInsets.all(16),
       children: [
         _buildItem(
+          context: context,
           icone: Icons.account_circle_outlined,
           label: 'Conta',
-          onTap: () {
-            Navigator.of(context).push(
-              MaterialPageRoute(builder: (_) => const TelaConta()),
-            );
-          },
+          onTap: () => Navigator.of(context).push(
+            MaterialPageRoute(builder: (_) => const TelaConta()),
+          ),
         ),
         const SizedBox(height: 10),
         _buildItem(
+          context: context,
           icone: Icons.settings_outlined,
           label: 'Acessibilidade',
-          onTap: () {
-            Navigator.of(context).push(
-              MaterialPageRoute(builder: (_) => const TelaAcessibilidade()),
-            );
-          },   
+          onTap: () => Navigator.of(context).push(
+            MaterialPageRoute(
+              builder: (_) => TelaAcessibilidade(
+                themeController: themeController,
+              ),
+            ),
+          ),
         ),
         const SizedBox(height: 10),
         _buildItem(
+          context: context,
           icone: Icons.folder_outlined,
           label: 'Solicitar documentos',
-          onTap: () {},   // Adicionar após fazer a aba 'solicitar documentos'
+          onTap: () {},
         ),
         const SizedBox(height: 10),
         _buildItem(
+          context: context,
           icone: Icons.logout,
           label: 'Log Out',
-          onTap: () {
-            Navigator.of(context).pushAndRemoveUntil(               // pushAndRemoveUntil faz com que o usuário não possa voltar a tela sem relogar
-              MaterialPageRoute(builder: (_) => const TelaLogin()),
-              (route) => false,
-            );
-          },
+          onTap: () => Navigator.of(context).pushAndRemoveUntil(
+            MaterialPageRoute(
+              builder: (_) => TelaLogin( // <- sem const
+                themeController: themeController,
+              ),
+            ),
+            (route) => false,
+          ),
         ),
       ],
     );
   }
-
+ 
   Widget _buildItem({
+    required BuildContext context,
     required IconData icone,
     required String label,
     required VoidCallback onTap,
@@ -70,7 +80,7 @@ class TelaConfiguracoes extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 18),
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: Theme.of(context).colorScheme.surface,
           borderRadius: BorderRadius.circular(12),
           boxShadow: [
             BoxShadow(
@@ -82,19 +92,19 @@ class TelaConfiguracoes extends StatelessWidget {
         ),
         child: Row(
           children: [
-            Icon(icone, color: const Color(0xFF424242), size: 32),
+            Icon(icone, color: Theme.of(context).colorScheme.onSurface, size: 32),
             const SizedBox(width: 16),
             Expanded(
               child: Text(
                 label,
-                style: const TextStyle(
+                style: TextStyle(
                   fontSize: 16,
                   fontWeight: FontWeight.w500,
-                  color: Color(0xFF212121),
+                  color: Theme.of(context).colorScheme.onSurface,
                 ),
               ),
             ),
-            Icon(Icons.chevron_right, color: Colors.grey[600], size: 24),
+            Icon(Icons.chevron_right, color: Theme.of(context).colorScheme.onSurface, size: 24),
           ],
         ),
       ),

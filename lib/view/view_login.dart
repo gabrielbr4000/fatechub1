@@ -1,10 +1,14 @@
+import 'package:fatechub2/view/view_esqueciSenha.dart';
 import 'package:flutter/material.dart';
 import '../controllers/login_controller.dart';
 import 'package:fatechub2/view/view_cadastrar.dart';
+import 'package:fatechub2/controllers/theme_controller.dart';
 import 'app_shell.dart';
 
 class TelaLogin extends StatefulWidget {
-  const TelaLogin({super.key});
+  final ThemeController themeController; // <- adicione
+
+  const TelaLogin({super.key, required this.themeController}); // <- adicione
 
   @override
   State<TelaLogin> createState() => _TelaLoginState();
@@ -20,12 +24,16 @@ class _TelaLoginState extends State<TelaLogin> {
   }
 
   void _onEstadoMudou() {
-    if (_controller.estado == LoginEstado.sucesso) {
-      Navigator.of(context).pushReplacement(
-        MaterialPageRoute(builder: (_) => const AppShell()), // Após realizar o login, ele chama a navbar para a aplicação
-      );
-    }
+  if (_controller.estado == LoginEstado.sucesso) {
+    Navigator.of(context).pushReplacement(
+      MaterialPageRoute(
+        builder: (_) => AppShell( // <- sem const
+          themeController: widget.themeController,
+        ),
+      ),
+    );
   }
+}
 
   @override
   void dispose() {
@@ -37,7 +45,7 @@ class _TelaLoginState extends State<TelaLogin> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: Theme.of(context).colorScheme.surfaceContainerLow,
       body: ListenableBuilder(
         listenable: _controller,
         builder: (context, _) {
@@ -91,7 +99,7 @@ class _TelaLoginState extends State<TelaLogin> {
           style: TextStyle(
             fontSize: 64,
             fontWeight: FontWeight.bold,
-            color: Colors.grey[700],
+            color: Theme.of(context).colorScheme.onSurface,
             height: 1.1,
           ),
         ),
@@ -101,7 +109,7 @@ class _TelaLoginState extends State<TelaLogin> {
           textAlign: TextAlign.center,
           style: TextStyle(
             fontSize: 16,
-            color: Colors.grey[600],
+            color: Theme.of(context).colorScheme.onSurface,
             fontWeight: FontWeight.w400,
           ),
         ),
@@ -112,9 +120,9 @@ class _TelaLoginState extends State<TelaLogin> {
   Widget _buildLabel(String texto) {
     return Text(
       texto,
-      style: const TextStyle(
+      style: TextStyle(
         fontSize: 15,
-        color: Color(0xFF424242),
+        color: Theme.of(context).colorScheme.onSurfaceVariant,
         fontWeight: FontWeight.w500,
       ),
     );
@@ -140,7 +148,7 @@ class _TelaLoginState extends State<TelaLogin> {
             _controller.senhaVisivel
                 ? Icons.visibility_off_outlined
                 : Icons.visibility_outlined,
-            color: Colors.grey[600],
+            color: Theme.of(context).colorScheme.onSurfaceVariant,
             size: 22,
           ),
           onPressed: _controller.toggleSenhaVisivel,
@@ -155,11 +163,11 @@ class _TelaLoginState extends State<TelaLogin> {
       contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 14),
       border: OutlineInputBorder(
         borderRadius: BorderRadius.circular(4),
-        borderSide: const BorderSide(color: Color(0xFFBDBDBD)),
+        borderSide: BorderSide(color: Theme.of(context).colorScheme.onSurface),
       ),
       enabledBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(4),
-        borderSide: const BorderSide(color: Color(0xFFBDBDBD)),
+        borderSide: BorderSide(color: Theme.of(context).colorScheme.onSurface),
       ),
       focusedBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(4),
@@ -174,7 +182,9 @@ class _TelaLoginState extends State<TelaLogin> {
 
   Widget _buildEsqueciSenha() {
     return GestureDetector(
-      onTap: () {},
+      onTap: () => Navigator.of(context).push(
+        MaterialPageRoute(builder: (_) => const TelaRecuperarSenha()),
+      ),
       child: const Text(
         'Esqueci a senha',
         style: TextStyle(
@@ -232,30 +242,30 @@ class _TelaLoginState extends State<TelaLogin> {
 
   // Para testes com a API do Firebase
   Widget _buildBotaoCadastrar() {
-  return Center(
-    child: SizedBox(
-      width: 120,
-      height: 44,
-      child: ElevatedButton(
-        onPressed: () => Navigator.of(context).push(
-          MaterialPageRoute(builder: (_) => const TelaCadastro()),
-        ),
-        style: ElevatedButton.styleFrom(
-          backgroundColor: const Color(0xFF8B0000),
-          foregroundColor: Colors.white,
-          elevation: 2,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(6),
+    return Center(
+      child: SizedBox(
+        width: 120,
+        height: 44,
+        child: ElevatedButton(
+          onPressed: () => Navigator.of(context).push(
+            MaterialPageRoute(builder: (_) => TelaCadastro(themeController: widget.themeController)),
+          ),
+          style: ElevatedButton.styleFrom(
+            backgroundColor: const Color(0xFF8B0000),
+            foregroundColor: Colors.white,
+            elevation: 2,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(6),
+            ),
+          ),
+          child: const Text(
+            'Cadastrar',
+            style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
           ),
         ),
-        child: const Text(
-          'Cadastrar',
-          style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
-        ),
       ),
-    ),
-  );
-}
+    );
+  }
 
   Widget _buildRodape() {
     return Container(

@@ -7,7 +7,7 @@ class TelaConta extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFEEEEEE),
+      backgroundColor: Theme.of(context).colorScheme.surfaceContainerLow,
       appBar: const AppBarPadrao(),
       body: _buildBody(context),
     );
@@ -24,12 +24,13 @@ class TelaConta extends StatelessWidget {
         // Card avatar + nome
         // Importar do banco de dados através da futura API
         // Fazer botão para alteração depois com backend
-        _buildCardPerfil(),
+        _buildCardPerfil(context),
         const SizedBox(height: 12),
 
         // Card dados acadêmicos
         // Importar do banco de dados através da futura API
         _buildCardInfo(
+          context: context,
           itens: const [
             _InfoItem(label: 'RA:', valor: '1234567890987'),
             _InfoItem(label: 'Email:', valor: 'fulano.silva@aluno.cps.sp.gov.br'),
@@ -43,6 +44,7 @@ class TelaConta extends StatelessWidget {
         // Card dados pessoais
         // Importar do banco de dados através da futura API
         _buildCardInfo(
+          context: context,
           itens: const [
             _InfoItem(label: 'CPF:', valor: '123.456.789-09'),
             _InfoItem(label: 'Nome:', valor: 'Fulano da Silva'),
@@ -57,7 +59,7 @@ class TelaConta extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: Theme.of(context).colorScheme.surface,
         borderRadius: BorderRadius.circular(12),
         boxShadow: [
           BoxShadow(
@@ -82,12 +84,12 @@ class TelaConta extends StatelessWidget {
             ),
           ),
           const SizedBox(width: 16),
-          const Text(
+          Text(
             'CONTA',
             style: TextStyle(
               fontSize: 16,
               fontWeight: FontWeight.w700,
-              color: Color(0xFF212121),
+              color: Theme.of(context).colorScheme.onSurface,
               letterSpacing: 0.5,
             ),
           ),
@@ -96,11 +98,11 @@ class TelaConta extends StatelessWidget {
     );
   }
 
-  Widget _buildCardPerfil() {
+  Widget _buildCardPerfil(BuildContext context) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 20),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: Theme.of(context).colorScheme.surface,
         borderRadius: BorderRadius.circular(12),
         boxShadow: [
           BoxShadow(
@@ -123,12 +125,12 @@ class TelaConta extends StatelessWidget {
             child: Icon(Icons.person, color: Colors.grey[600], size: 34),
           ),
           const SizedBox(width: 16),
-          const Text(
+          Text(
             'Fulano da Silva',
             style: TextStyle(
               fontSize: 18,
               fontWeight: FontWeight.w600,
-              color: Color(0xFF212121),
+              color: Theme.of(context).colorScheme.onSurface,
             ),
           ),
         ],
@@ -136,11 +138,15 @@ class TelaConta extends StatelessWidget {
     );
   }
 
-  Widget _buildCardInfo({required List<_InfoItem> itens}) {
+  Widget _buildCardInfo({
+    required BuildContext context,
+    required List<_InfoItem> itens
+    }) 
+    {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: Theme.of(context).colorScheme.surface,
         borderRadius: BorderRadius.circular(12),
         boxShadow: [
           BoxShadow(
@@ -161,18 +167,18 @@ class TelaConta extends StatelessWidget {
                     children: [
                       TextSpan(
                         text: '${item.label}  ',
-                        style: const TextStyle(
+                        style: TextStyle(
                           fontSize: 14,
                           fontWeight: FontWeight.w700,
-                          color: Color(0xFF212121),
+                          color: Theme.of(context).colorScheme.onSurface,
                         ),
                       ),
                       TextSpan(
                         text: item.valor,
-                        style: const TextStyle(
+                        style: TextStyle(
                           fontSize: 14,
                           fontWeight: FontWeight.w400,
-                          color: Color(0xFF212121),
+                          color: Theme.of(context).colorScheme.onSurface,
                         ),
                       ),
                     ],

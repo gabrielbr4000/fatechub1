@@ -57,7 +57,7 @@ List<Map<String, dynamic>> get _disciplinasFiltradas {
   Widget build(BuildContext context) {
     super.build(context);
     return Scaffold(
-      backgroundColor: const Color(0xFFEEEEEE),
+      backgroundColor: Theme.of(context).colorScheme.surfaceContainerLow,
       appBar: const AppBarPadrao(),
       body: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -73,15 +73,15 @@ List<Map<String, dynamic>> get _disciplinasFiltradas {
   Widget _buildNomeTurma() {
     return Container(
       width: double.infinity,
-      color: Colors.white,
+      color: Theme.of(context).colorScheme.surface,
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
       child: Text(
         _turmaAtual,
         textAlign: TextAlign.center,
-        style: const TextStyle(
+        style: TextStyle(
           fontSize: 15,
           fontWeight: FontWeight.w600,
-          color: Color(0xFF212121),
+          color: Theme.of(context).colorScheme.onSurface,
         ),
       ),
     );
@@ -89,7 +89,7 @@ List<Map<String, dynamic>> get _disciplinasFiltradas {
 
   Widget _buildBarraFiltros() {
     return Container(
-      color: Colors.white,
+      color: Theme.of(context).colorScheme.surface,
       padding: const EdgeInsets.fromLTRB(12, 0, 12, 12),
       child: Row(
         children: [
@@ -98,17 +98,17 @@ List<Map<String, dynamic>> get _disciplinasFiltradas {
             height: 38,
             padding: const EdgeInsets.symmetric(horizontal: 10),
             decoration: BoxDecoration(
-              border: Border.all(color: const Color(0xFFBDBDBD)),
+              border: Border.all(color: Theme.of(context).colorScheme.onSurface),
               borderRadius: BorderRadius.circular(6),
-              color: Colors.white,
+              color: Theme.of(context).colorScheme.surface,
             ),
             child: DropdownButtonHideUnderline(
               child: DropdownButton<String>(
                 value: _filtro,
                 icon: const Icon(Icons.arrow_drop_down, size: 20),
-                style: const TextStyle(
+                style: TextStyle(
                   fontSize: 13,
-                  color: Color(0xFF424242),
+                  color: Theme.of(context).colorScheme.onSurface,
                 ),
                 items: ['Todos', 'Ativos', 'Inativos']
                     .map((e) => DropdownMenuItem(value: e, child: Text(e)))
@@ -129,15 +129,15 @@ List<Map<String, dynamic>> get _disciplinasFiltradas {
                 style: const TextStyle(fontSize: 13),
                 decoration: InputDecoration(
                   hintText: 'Buscar',
-                  hintStyle: TextStyle(color: Colors.grey[400], fontSize: 13),
+                  hintStyle: TextStyle(color: Theme.of(context).colorScheme.onSurface, fontSize: 13),
                   contentPadding: const EdgeInsets.symmetric(horizontal: 12),
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(6),
-                    borderSide: const BorderSide(color: Color(0xFFBDBDBD)),
+                    borderSide: BorderSide(color: Theme.of(context).colorScheme.onSurfaceVariant),
                   ),
                   enabledBorder: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(6),
-                    borderSide: const BorderSide(color: Color(0xFFBDBDBD)),
+                    borderSide: BorderSide(color: Theme.of(context).colorScheme.onSurfaceVariant),
                   ),
                   focusedBorder: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(6),
@@ -155,14 +155,14 @@ List<Map<String, dynamic>> get _disciplinasFiltradas {
             height: 38,
             padding: const EdgeInsets.symmetric(horizontal: 10),
             decoration: BoxDecoration(
-              border: Border.all(color: const Color(0xFFBDBDBD)),
+              border: Border.all(color: Theme.of(context).colorScheme.onSurfaceVariant),
               borderRadius: BorderRadius.circular(6),
-              color: Colors.white,
+              color: Theme.of(context).colorScheme.surface,
             ),
-            child: const Center(
+            child: Center(
               child: Text(
                 'Ordenar por',
-                style: TextStyle(fontSize: 12, color: Color(0xFF424242)),
+                style: TextStyle(fontSize: 12, color: Theme.of(context).colorScheme.onSurface),
               ),
             ),
           ),
@@ -175,10 +175,10 @@ List<Map<String, dynamic>> get _disciplinasFiltradas {
     final disciplinas = _disciplinasFiltradas;
 
     if (disciplinas.isEmpty) {
-      return const Center(
+      return Center(
         child: Text(
           'Nenhuma disciplina encontrada.',
-          style: TextStyle(color: Colors.grey),
+          style: TextStyle(color: Theme.of(context).colorScheme.onSurface),
         ),
       );
     }
@@ -202,7 +202,7 @@ List<Map<String, dynamic>> get _disciplinasFiltradas {
       onTap: () {},
       child: Container(
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: Theme.of(context).colorScheme.surface,
           borderRadius: BorderRadius.circular(8),
           boxShadow: [
             BoxShadow(
@@ -239,10 +239,10 @@ List<Map<String, dynamic>> get _disciplinasFiltradas {
                 disciplina['nome'] as String,
                 maxLines: 2,
                 overflow: TextOverflow.ellipsis,
-                style: const TextStyle(
+                style: TextStyle(
                   fontSize: 12,
                   fontWeight: FontWeight.w500,
-                  color: Color(0xFF212121),
+                  color: Theme.of(context).colorScheme.onSurface,
                 ),
               ),
             ),

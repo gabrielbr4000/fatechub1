@@ -103,7 +103,7 @@ class _TelaChatState extends State<TelaChat> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFEEEEEE),
+      backgroundColor: Theme.of(context).colorScheme.surfaceContainerLow,
       appBar: AppBar(
         backgroundColor: const Color(0xFF8B0000),
         foregroundColor: Colors.white,
@@ -135,7 +135,7 @@ class _TelaChatState extends State<TelaChat> {
         actions: [
           PopupMenuButton<String>(
           icon: const Icon(Icons.more_vert, color: Colors.white),
-          color: Colors.white, // <- adiciona isso
+          color: Theme.of(context).colorScheme.surface, // <- adiciona isso
           onSelected: (value) {},
           itemBuilder: (_) => const [
               PopupMenuItem(value: 'perfil',   child: Text('Ver perfil')),
@@ -155,13 +155,13 @@ class _TelaChatState extends State<TelaChat> {
                       mainAxisSize: MainAxisSize.min,
                       children: [
                         Icon(Icons.chat_bubble_outline,
-                            size: 48, color: Colors.grey.shade400),
+                            size: 48, color: Theme.of(context).colorScheme.onSurfaceVariant),
                         const SizedBox(height: 12),
                         Text(
                           'Nenhuma mensagem ainda',
                           style: TextStyle(
                             fontSize: 14,
-                            color: Colors.grey.shade500,
+                            color: Theme.of(context).colorScheme.onSurfaceVariant,
                           ),
                         ),
                       ],
@@ -180,7 +180,7 @@ class _TelaChatState extends State<TelaChat> {
 
           // ── Campo de entrada ──
           Container(
-            color: Colors.white,
+            color: Theme.of(context).colorScheme.surface,
             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
             child: SafeArea(
               top: false,
@@ -215,9 +215,9 @@ class _TelaChatState extends State<TelaChat> {
                       decoration: InputDecoration(
                         hintText: 'Digite uma mensagem...',
                         hintStyle: TextStyle(
-                            color: Colors.grey.shade400, fontSize: 14),
+                            color: Theme.of(context).colorScheme.onSurfaceVariant, fontSize: 14),
                         filled: true,
-                        fillColor: const Color(0xFFF5F5F5),
+                        fillColor: Theme.of(context).colorScheme.surfaceContainerLow,
                         contentPadding: const EdgeInsets.symmetric(
                             horizontal: 14, vertical: 10),
                         border: OutlineInputBorder(

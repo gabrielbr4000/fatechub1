@@ -1,14 +1,17 @@
-import 'package:flutter/material.dart';
 import 'package:fatechub2/controllers/navigation_controller.dart';
-
-// Importar futuras telas aqui
-import 'package:fatechub2/view/view_messenger.dart';
+import 'package:fatechub2/controllers/theme_controller.dart';
 import 'package:fatechub2/view/view_home.dart';
-import 'package:fatechub2/view/view_turma.dart';
 import 'package:fatechub2/view/view_menu.dart';
+import 'package:fatechub2/view/view_messenger.dart';
+import 'package:fatechub2/view/view_turma.dart';
+import 'package:flutter/material.dart';
+
+
 
 class AppShell extends StatefulWidget {
-  const AppShell({super.key});
+  final ThemeController themeController;
+
+  const AppShell({super.key, required this.themeController});
 
   @override
   State<AppShell> createState() => _AppShellState();
@@ -17,17 +20,10 @@ class AppShell extends StatefulWidget {
 class _AppShellState extends State<AppShell> {
   final NavigationController _navController = NavigationController();
   late final PageController _pageController;
+  late final List<Widget> _telas;
 
   // Flag para evitar conflito entre nav bar e arrasto
   bool _navegandoProgramaticamente = false;
-
-  // Adicionar as telas na ordem dos itens do nav bar
-  final List<Widget> _telas = [
-    const TelaHome(), // Home        
-    const TelaMessenger(), // Mensagens
-    const TelaTurmas(), // Turma       
-    const TelaConfiguracoes(), // Menu        — trocar por TelaMenu()
-  ];
 
   static const List<_NavItem> _navItems = [
     _NavItem(icon: Icons.home_outlined, label: 'Home'),
@@ -36,16 +32,21 @@ class _AppShellState extends State<AppShell> {
     _NavItem(icon: Icons.grid_view_outlined, label: 'Menu'),
   ];
 
-    @override
+  @override
   void initState() {
     super.initState();
+    _telas = [
+      const TelaHome(),
+      const TelaMessenger(),
+      const TelaTurmas(),
+      TelaConfiguracoes(themeController: widget.themeController),
+    ];
     _pageController = PageController(initialPage: _navController.currentIndex);
- 
-    // Sincroniza o controller com o PageView
+
     _navController.addListener(() {
       if (_pageController.hasClients) {
         _navegandoProgramaticamente = true;
-                _pageController
+        _pageController
             .animateToPage(
               _navController.currentIndex,
               duration: const Duration(milliseconds: 300),
@@ -55,14 +56,14 @@ class _AppShellState extends State<AppShell> {
       }
     });
   }
- 
+
   @override
   void dispose() {
     _pageController.dispose();
     _navController.dispose();
     super.dispose();
   }
- 
+
   @override
   Widget build(BuildContext context) {
     return ListenableBuilder(
@@ -84,14 +85,14 @@ class _AppShellState extends State<AppShell> {
       },
     );
   }
- 
+
   Widget _buildBottomNavBar() {
     return Container(
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: Theme.of(context).colorScheme.surface,
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.08),
+            color: Colors.black.withValues(alpha: 0.08),
             blurRadius: 8,
             offset: const Offset(0, -2),
           ),
@@ -111,11 +112,11 @@ class _AppShellState extends State<AppShell> {
       ),
     );
   }
- 
+
   Widget _buildNavItem(int index) {
     final bool isSelected = _navController.currentIndex == index;
     final item = _navItems[index];
- 
+
     return GestureDetector(
       onTap: () => _navController.goTo(index),
       child: AnimatedContainer(
@@ -130,16 +131,20 @@ class _AppShellState extends State<AppShell> {
           children: [
             Icon(
               item.icon,
-              color: isSelected ? Colors.white : Colors.grey[600],
+              color: isSelected
+                ? Colors.white
+                  : Theme.of(context).colorScheme.onSurfaceVariant,
               size: 24,
             ),
             const SizedBox(height: 4),
             Text(
               item.label,
               style: TextStyle(
-                fontSize: 11,
-                fontWeight: isSelected ? FontWeight.w600 : FontWeight.w400,
-                color: isSelected ? Colors.white : Colors.grey[600],
+                  fontSize: 11,
+                  fontWeight: isSelected ? FontWeight.w600 : FontWeight.w400,
+                  color: isSelected
+                    ? Colors.white
+                      : Theme.of(context).colorScheme.onSurfaceVariant,
               ),
             ),
           ],
@@ -148,11 +153,10 @@ class _AppShellState extends State<AppShell> {
     );
   }
 }
- 
+
 class _NavItem {
   final IconData icon;
   final String label;
- 
+
   const _NavItem({required this.icon, required this.label});
 }
- 

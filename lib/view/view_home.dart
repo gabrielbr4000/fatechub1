@@ -8,7 +8,7 @@ class TelaHome extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFEEEEEE),
+      backgroundColor: Theme.of(context).colorScheme.surfaceContainerLow,
       appBar: const AppBarPadrao(),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16),
@@ -64,7 +64,7 @@ class _MuralCardState extends State<_MuralCard> {
     return Container(
       height: 220,
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: Theme.of(context).colorScheme.surface,
         borderRadius: BorderRadius.circular(12),
         boxShadow: [
           BoxShadow(
@@ -85,12 +85,12 @@ class _MuralCardState extends State<_MuralCard> {
               itemBuilder: (context, index) {
                 final slide = _slides[index];
                 return Container(
-                  color: const Color(0xFFF5F5F5),
+                  color: Theme.of(context).colorScheme.surface,
                   child: Center(
                     child: Column(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        Icon(slide.icone, size: 48, color: Colors.grey.shade400),
+                        Icon(slide.icone, size: 48, color: Theme.of(context).colorScheme.onSurfaceVariant),
                         const SizedBox(height: 8),
                         Padding(
                           padding: const EdgeInsets.symmetric(horizontal: 32),
@@ -98,7 +98,7 @@ class _MuralCardState extends State<_MuralCard> {
                             slide.texto,
                             textAlign: TextAlign.center,
                             style: TextStyle(
-                              color: Colors.grey.shade500,
+                              color: Theme.of(context).colorScheme.onSurfaceVariant,
                               fontSize: 14,
                             ),
                           ),
@@ -118,10 +118,10 @@ class _MuralCardState extends State<_MuralCard> {
                   color: const Color(0xFF8B0000).withOpacity(0.9),
                   borderRadius: const BorderRadius.vertical(top: Radius.circular(12)),
                 ),
-                child: const Text(
+                child: Text(
                   'Mural de Novidades',
                   style: TextStyle(
-                    color: Colors.white,
+                    color: Theme.of(context).colorScheme.onSurface,
                     fontSize: 13,
                     fontWeight: FontWeight.w600,
                     letterSpacing: 0.3,
@@ -227,14 +227,14 @@ class _SecaoNoticias extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Padding(
+        Padding(
           padding: EdgeInsets.only(bottom: 10),
           child: Text(
             'Avisos Recentes',
             style: TextStyle(
               fontSize: 15,
               fontWeight: FontWeight.w700,
-              color: Color(0xFF333333),
+              color: Theme.of(context).colorScheme.onSurface,
               letterSpacing: 0.2,
             ),
           ),
@@ -275,7 +275,7 @@ class _CardAviso extends StatelessWidget {
       margin: const EdgeInsets.only(bottom: 10),
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: Theme.of(context).colorScheme.surface,
         borderRadius: BorderRadius.circular(12),
         boxShadow: [
           BoxShadow(
@@ -303,16 +303,16 @@ class _CardAviso extends StatelessWidget {
               children: [
                 Text(
                   aviso.titulo,
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontSize: 13,
                     fontWeight: FontWeight.w600,
-                    color: Color(0xFF222222),
+                    color: Theme.of(context).colorScheme.onSurface,
                   ),
                 ),
                 const SizedBox(height: 2),
                 Text(
                   aviso.descricao,
-                  style: TextStyle(fontSize: 12, color: Colors.grey.shade600),
+                  style: TextStyle(fontSize: 12, color: Theme.of(context).colorScheme.onSurfaceVariant),
                   maxLines: 2,
                   overflow: TextOverflow.ellipsis,
                 ),
@@ -322,10 +322,10 @@ class _CardAviso extends StatelessWidget {
           const SizedBox(width: 8),
           Text(
             aviso.data,
-            style: TextStyle(fontSize: 11, color: Colors.grey.shade500),
+            style: TextStyle(fontSize: 11, color: Theme.of(context).colorScheme.onSurfaceVariant),
           ),
           const SizedBox(width: 4),
-          Icon(Icons.chevron_right, color: Colors.grey.shade400, size: 18),
+          Icon(Icons.chevron_right, color: Theme.of(context).colorScheme.onSurface, size: 18),
         ],
       ),
     );
@@ -351,14 +351,14 @@ class _SecaoAcessoRapido extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Padding(
+        Padding(
           padding: EdgeInsets.only(bottom: 10),
           child: Text(
             'Acesso Rápido',
             style: TextStyle(
               fontSize: 15,
               fontWeight: FontWeight.w700,
-              color: Color(0xFF333333),
+              color: Theme.of(context).colorScheme.onSurface,
               letterSpacing: 0.2,
             ),
           ),
@@ -394,7 +394,7 @@ class _CardAcesso extends StatelessWidget {
       onTap: () {},
       child: Container(
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: Theme.of(context).colorScheme.surface,
           borderRadius: BorderRadius.circular(12),
           boxShadow: [
             BoxShadow(
@@ -422,10 +422,10 @@ class _CardAcesso extends StatelessWidget {
               Expanded(
                 child: Text(
                   item.label,
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontSize: 12,
                     fontWeight: FontWeight.w600,
-                    color: Color(0xFF222222),
+                    color: Theme.of(context).colorScheme.onSurface,
                     height: 1.4,
                   ),
                 ),

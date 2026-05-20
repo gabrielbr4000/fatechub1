@@ -1,8 +1,10 @@
+import 'package:fatechub2/controllers/theme_controller.dart';
 import 'package:fatechub2/widgets/app_bar.dart';
 import 'package:flutter/material.dart';
 
 class TelaAcessibilidade extends StatefulWidget {
-  const TelaAcessibilidade({super.key});
+  final ThemeController themeController;
+  const TelaAcessibilidade({super.key, required this.themeController});
 
   @override
   State<TelaAcessibilidade> createState() => _TelaAcessibilidadeState();
@@ -10,13 +12,12 @@ class TelaAcessibilidade extends StatefulWidget {
 
 class _TelaAcessibilidadeState extends State<TelaAcessibilidade> {
   bool _altoContraste = false;
-  bool _modoEscuro = false;
   bool _movReduzido = false;
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFEEEEEE),
+      backgroundColor: Theme.of(context).colorScheme.surfaceContainerLow,
       appBar: const AppBarPadrao(),
       body: _buildBody(context),
     );
@@ -41,8 +42,16 @@ class _TelaAcessibilidadeState extends State<TelaAcessibilidade> {
         _buildItemToggle(
           icone: Icons.wb_sunny_outlined,
           label: 'Modo Escuro',
-          valor: _modoEscuro,
-          onChanged: (v) => setState(() => _modoEscuro = v),      // Fazer implementação
+          valor: widget.themeController.modoEscuro,
+          onChanged: (_) => widget.themeController.toggle(),
+
+          // NOTA PARA DESENVOLVER OS TEMAS
+          // Fundo =            Theme.of(context).colorScheme.surfaceContainerLow
+          // Cards =            Theme.of(context).colorScheme.surface
+          // Texto principal =  Theme.of(context).colorScheme.onSurface
+          // Texto secundario = Theme.of(context).colorScheme.onSurfaceVariant
+          // NÃO MUDAR AS CORES VERMELHAS, SÃO A IDENTIDADE VISUAL DO PROJETO
+
         ),
         const SizedBox(height: 10),
         _buildItemToggle(
@@ -67,7 +76,7 @@ class _TelaAcessibilidadeState extends State<TelaAcessibilidade> {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: Theme.of(context).colorScheme.surface,
         borderRadius: BorderRadius.circular(12),
         boxShadow: [
           BoxShadow(
@@ -92,12 +101,12 @@ class _TelaAcessibilidadeState extends State<TelaAcessibilidade> {
             ),
           ),
           const SizedBox(width: 16),
-          const Text(
+          Text(
             'ACESSIBILIDADE',
             style: TextStyle(
               fontSize: 16,
               fontWeight: FontWeight.w700,
-              color: Color(0xFF212121),
+              color: Theme.of(context).colorScheme.onSurface,
               letterSpacing: 0.5,
             ),
           ),
@@ -115,7 +124,7 @@ class _TelaAcessibilidadeState extends State<TelaAcessibilidade> {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: Theme.of(context).colorScheme.surface,
         borderRadius: BorderRadius.circular(12),
         boxShadow: [
           BoxShadow(
@@ -127,15 +136,15 @@ class _TelaAcessibilidadeState extends State<TelaAcessibilidade> {
       ),
       child: Row(
         children: [
-          Icon(icone, color: const Color(0xFF424242), size: 32),
+          Icon(icone, color: Theme.of(context).colorScheme.onSurface, size: 32),
           const SizedBox(width: 16),
           Expanded(
             child: Text(
               label,
-              style: const TextStyle(
+              style: TextStyle(
                 fontSize: 16,
                 fontWeight: FontWeight.w500,
-                color: Color(0xFF212121),
+                color: Theme.of(context).colorScheme.onSurface,
               ),
             ),
           ),
@@ -162,7 +171,7 @@ class _TelaAcessibilidadeState extends State<TelaAcessibilidade> {
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 18),
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: Theme.of(context).colorScheme.surface,
           borderRadius: BorderRadius.circular(12),
           boxShadow: [
             BoxShadow(
@@ -174,19 +183,19 @@ class _TelaAcessibilidadeState extends State<TelaAcessibilidade> {
         ),
         child: Row(
           children: [
-            Icon(icone, color: const Color(0xFF424242), size: 32),
+            Icon(icone, color: Theme.of(context).colorScheme.onSurface, size: 32),
             const SizedBox(width: 16),
             Expanded(
               child: Text(
                 label,
-                style: const TextStyle(
+                style: TextStyle(
                   fontSize: 16,
                   fontWeight: FontWeight.w500,
-                  color: Color(0xFF212121),
+                  color: Theme.of(context).colorScheme.onSurface,
                 ),
               ),
             ),
-            Icon(Icons.chevron_right, color: Colors.grey[600], size: 24),
+            Icon(Icons.chevron_right, color: Theme.of(context).colorScheme.onSurface, size: 24),
           ],
         ),
       ),

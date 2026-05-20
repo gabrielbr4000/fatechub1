@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 import '../controllers/cadastrar_controller.dart';
+import 'package:fatechub2/controllers/theme_controller.dart';
 import 'app_shell.dart';
 
 class TelaCadastro extends StatefulWidget {
-  const TelaCadastro({super.key});
+  final ThemeController themeController;
+  const TelaCadastro({super.key,  required this.themeController});
 
   @override
   State<TelaCadastro> createState() => _TelaCadastroState();
@@ -21,7 +23,9 @@ class _TelaCadastroState extends State<TelaCadastro> {
   void _onEstadoMudou() {
     if (_controller.estado == CadastroEstado.sucesso) {
       Navigator.of(context).pushReplacement(
-        MaterialPageRoute(builder: (_) => const AppShell()), // Após realizar o login, ele chama a navbar para a aplicação
+        MaterialPageRoute(builder: (_) => AppShell(
+          themeController: widget.themeController,
+        )), // Após realizar o login, ele chama a navbar para a aplicação
       );
     }
   }
@@ -36,7 +40,7 @@ class _TelaCadastroState extends State<TelaCadastro> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: Theme.of(context).colorScheme.surfaceContainerLow,
       body: ListenableBuilder(
         listenable: _controller,
         builder: (context, _) {
@@ -99,7 +103,7 @@ class _TelaCadastroState extends State<TelaCadastro> {
           style: TextStyle(
             fontSize: 64,
             fontWeight: FontWeight.bold,
-            color: Colors.grey[700],
+            color: Theme.of(context).colorScheme.onSurface,
             height: 1.1,
           ),
         ),
@@ -109,7 +113,7 @@ class _TelaCadastroState extends State<TelaCadastro> {
           textAlign: TextAlign.center,
           style: TextStyle(
             fontSize: 16,
-            color: Colors.grey[600],
+            color: Theme.of(context).colorScheme.onSurface,
             fontWeight: FontWeight.w400,
           ),
         ),
@@ -120,9 +124,9 @@ class _TelaCadastroState extends State<TelaCadastro> {
   Widget _buildLabel(String texto) {
     return Text(
       texto,
-      style: const TextStyle(
+      style: TextStyle(
         fontSize: 15,
-        color: Color(0xFF424242),
+        color: Theme.of(context).colorScheme.onSurfaceVariant,
         fontWeight: FontWeight.w500,
       ),
     );
@@ -166,7 +170,7 @@ class _TelaCadastroState extends State<TelaCadastro> {
             _controller.senhaVisivel
                 ? Icons.visibility_off_outlined
                 : Icons.visibility_outlined,
-            color: Colors.grey[600],
+            color: Theme.of(context).colorScheme.onSurfaceVariant,
             size: 22,
           ),
           onPressed: _controller.toggleSenhaVisivel,
@@ -186,7 +190,7 @@ class _TelaCadastroState extends State<TelaCadastro> {
             _controller.confirmarSenhaVisivel
                 ? Icons.visibility_off_outlined
                 : Icons.visibility_outlined,
-            color: Colors.grey[600],
+            color: Theme.of(context).colorScheme.onSurfaceVariant,
             size: 22,
           ),
           onPressed: _controller.toggleConfirmarSenhaVisivel,
@@ -202,11 +206,11 @@ class _TelaCadastroState extends State<TelaCadastro> {
       contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 14),
       border: OutlineInputBorder(
         borderRadius: BorderRadius.circular(4),
-        borderSide: const BorderSide(color: Color(0xFFBDBDBD)),
+        borderSide: BorderSide(color: Theme.of(context).colorScheme.onSurface),
       ),
       enabledBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(4),
-        borderSide: const BorderSide(color: Color(0xFFBDBDBD)),
+        borderSide: BorderSide(color: Theme.of(context).colorScheme.onSurface),
       ),
       focusedBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(4),

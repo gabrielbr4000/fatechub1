@@ -26,31 +26,31 @@ class LoginController extends ChangeNotifier {
   }
 
   Future<void> login() async {
-  if (!_validar()) return;
+    if (!_validar()) return;
 
-  _estado = LoginEstado.carregando;
-  _mensagemErro = null;
-  notifyListeners();
+    _estado = LoginEstado.carregando;
+    _mensagemErro = null;
+    notifyListeners();
 
-  try {
-    await FirebaseAuth.instance.signInWithEmailAndPassword(
-      email: emailController.text.trim(),
-      password: senhaController.text.trim(),
-    );
+    try {
+      await FirebaseAuth.instance.signInWithEmailAndPassword(
+        email: emailController.text.trim(),
+        password: senhaController.text.trim(),
+      );
 
-    _estado = LoginEstado.sucesso;
+      _estado = LoginEstado.sucesso;
 
-  } on FirebaseAuthException catch (e) {
-    _estado = LoginEstado.erro;
-    _mensagemErro = _traduzirErro(e.code);
+    } on FirebaseAuthException catch (e) {
+      _estado = LoginEstado.erro;
+      _mensagemErro = _traduzirErro(e.code);
 
-  } catch (e) {
-    _estado = LoginEstado.erro;
-    _mensagemErro = 'Erro ao conectar. Tente novamente.';
+    } catch (e) {
+      _estado = LoginEstado.erro;
+      _mensagemErro = 'Erro ao conectar. Tente novamente.';
+    }
+
+    notifyListeners();
   }
-
-  notifyListeners();
-}
 // Traduz os códigos de erro do Firebase para português
 String _traduzirErro(String code) {
   return switch (code) {
