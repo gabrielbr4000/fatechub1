@@ -1,6 +1,20 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:fatechub2/controllers/theme_controller.dart';
 import 'package:fatechub2/widgets/app_bar.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+
+Future<Map<String, dynamic>?> buscarDadosUsuario() async {
+  final uid = FirebaseAuth.instance.currentUser?.uid;
+  if (uid == null) return null;
+
+  final doc = await FirebaseFirestore.instance
+      .collection('usuarios')
+      .doc(uid)
+      .get();
+
+  return doc.data();
+}
 
 class TelaAcessibilidade extends StatefulWidget {
   final ThemeController themeController;
@@ -16,10 +30,26 @@ class _TelaAcessibilidadeState extends State<TelaAcessibilidade> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: Theme.of(context).colorScheme.surfaceContainerLow,
-      appBar: const AppBarPadrao(),
-      body: _buildBody(context),
+    return FutureBuilder<Map<String, dynamic>?>(
+      future: buscarDadosUsuario(),
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting || !snapshot.hasData) {
+          return Scaffold(
+            appBar: const AppBarPadrao(nomeUsuario: 'Carregando...'),
+            body: const Center(child: CircularProgressIndicator()),
+          );
+        }
+
+        final dados = snapshot.data;
+        final nome = dados?['nome'] ?? 'Usuário';
+
+
+        return Scaffold(
+          backgroundColor: Theme.of(context).colorScheme.surfaceContainerLow,
+          appBar: AppBarPadrao(nomeUsuario: nome),
+          body: _buildBody(context),
+        );
+      }
     );
   }
 

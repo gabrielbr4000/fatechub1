@@ -1,57 +1,133 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:fatechub2/widgets/app_bar.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+
+Future<Map<String, dynamic>?> buscarDadosUsuario() async {
+  final uid = FirebaseAuth.instance.currentUser?.uid;
+  if (uid == null) return null;
+
+  final doc = await FirebaseFirestore.instance
+      .collection('usuarios')
+      .doc(uid)
+      .get();
+
+  return doc.data();
+}
 
 class TelaConta extends StatelessWidget {
   const TelaConta({super.key});
 
+  Future<Map<String, dynamic>?> buscarDadosUsuario() async {
+    final uid = FirebaseAuth.instance.currentUser?.uid;
+    if (uid == null) return null;
+
+    final doc = await FirebaseFirestore.instance
+      .collection('usuarios')
+      .doc(uid)
+      .get();
+
+    return doc.data();
+  }
+
+  
+
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: Theme.of(context).colorScheme.surfaceContainerLow,
-      appBar: const AppBarPadrao(),
-      body: _buildBody(context),
+    return FutureBuilder<Map<String, dynamic>?>(
+      future: buscarDadosUsuario(),
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting || !snapshot.hasData) {
+          return Scaffold(
+            appBar: const AppBarPadrao(nomeUsuario: 'Carregando...'),
+            body: const Center(child: CircularProgressIndicator()),
+          );
+        }
+
+        final dados = snapshot.data;
+        final nome = dados?['nome'] ?? 'Usuário';
+
+
+        return Scaffold(
+          backgroundColor: Theme.of(context).colorScheme.surfaceContainerLow,
+          appBar: AppBarPadrao(nomeUsuario: nome),
+          body: _buildBody(context),
+        );
+      }
     );
   }
 
   Widget _buildBody(BuildContext context) {
-    return ListView(
-      padding: const EdgeInsets.all(16),
-      children: [
-        // Cabeçalho com botão voltar
-        _buildCabecalho(context),
-        const SizedBox(height: 12),
 
-        // Card avatar + nome
-        // Importar do banco de dados através da futura API
-        // Fazer botão para alteração depois com backend
-        _buildCardPerfil(context),
-        const SizedBox(height: 12),
+    return FutureBuilder<Map<String, dynamic>?>(
+      future: buscarDadosUsuario(),
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return const CircularProgressIndicator();
+        }
+        final dados = snapshot.data;
+        if (dados == null) {
+          return const Text('Erro ao carregar dados.');
+        }
 
-        // Card dados acadêmicos
-        // Importar do banco de dados através da futura API
-        _buildCardInfo(
-          context: context,
-          itens: const [
-            _InfoItem(label: 'RA:', valor: '1234567890987'),
-            _InfoItem(label: 'Email:', valor: 'fulano.silva@aluno.cps.sp.gov.br'),
-            _InfoItem(label: 'Curso:', valor: 'Análise e Desenv. de Sistemas'),
-            _InfoItem(label: 'Turno:', valor: 'Manhã'),
-            _InfoItem(label: 'Ciclo:', valor: '4'),
+        return ListView(
+          padding: const EdgeInsets.all(16),
+          children: [
+            // Cabeçalho com botão voltar
+            _buildCabecalho(context),
+            const SizedBox(height: 12),
+
+            // Card avatar + nome
+            // Importar do banco de dados através da futura API
+            // Fazer botão para alteração depois com backend
+            _buildCardPerfil(context, dados),
+            const SizedBox(height: 12),
+
+            // Card dados acadêmicos
+            _buildCardInfo(
+              context: context,
+              itens: [
+                _InfoItem(label: 'RA:', valor: dados['ra'] ?? ''),
+                _InfoItem(label: 'Email:', valor: dados['email'] ?? ''),
+                _InfoItem(label: 'Curso:', valor: dados['curso'] ?? ''),
+                _InfoItem(label: 'Turno:', valor: dados['turno'] ?? ''),
+                _InfoItem(label: 'Ciclo:', valor: dados['ciclo'] ?? ''),
+              ],
+            ),
+            const SizedBox(height: 12),
+
+            // Adicionar opções para mudar o nome e a senha posteriormente
+
+            /*_buildItem(
+              context: context,
+              icone: Icons.settings_outlined,
+              label: 'Mudar nome',
+              onTap: () => Navigator.of(context).push(
+                MaterialPageRoute(
+                  builder: (_) => TelaMudarNome(
+                    themeController: themeController,
+                  ),
+                ),
+              ),
+            ),
+
+            const SizedBox(height: 10),
+
+            _buildItem(
+              context: context,
+              icone: Icons.settings_outlined,
+              label: 'Mudar senha',
+              onTap: () => Navigator.of(context).push(
+                MaterialPageRoute(
+                  builder: (_) => TelaMudarSenha(
+                    themeController: themeController,
+                  ),
+                ),
+              ),
+            ), */
           ],
-        ),
-        const SizedBox(height: 12),
-
-        // Card dados pessoais
-        // Importar do banco de dados através da futura API
-        _buildCardInfo(
-          context: context,
-          itens: const [
-            _InfoItem(label: 'CPF:', valor: '123.456.789-09'),
-            _InfoItem(label: 'Nome:', valor: 'Fulano da Silva'),
-            _InfoItem(label: 'Nome social:', valor: 'Fulano da Silva'),
-          ],
-        ),
-      ],
+        );
+      }
     );
   }
 
@@ -98,7 +174,7 @@ class TelaConta extends StatelessWidget {
     );
   }
 
-  Widget _buildCardPerfil(BuildContext context) {
+  Widget _buildCardPerfil(BuildContext context, Map<String, dynamic>? dados) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 20),
       decoration: BoxDecoration(
@@ -126,7 +202,7 @@ class TelaConta extends StatelessWidget {
           ),
           const SizedBox(width: 16),
           Text(
-            'Fulano da Silva',
+            dados?['nome'] ?? 'Nome não encontrado',
             style: TextStyle(
               fontSize: 18,
               fontWeight: FontWeight.w600,
@@ -187,6 +263,48 @@ class TelaConta extends StatelessWidget {
               ),
             )
             .toList(),
+      ),
+    );
+  }
+
+  Widget _buildItem({
+    required BuildContext context,
+    required IconData icone,
+    required String label,
+    required VoidCallback onTap,
+  }) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 18),
+        decoration: BoxDecoration(
+          color: Theme.of(context).colorScheme.surface,
+          borderRadius: BorderRadius.circular(12),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.05),
+              blurRadius: 4,
+              offset: const Offset(0, 2),
+            ),
+          ],
+        ),
+        child: Row(
+          children: [
+            Icon(icone, color: Theme.of(context).colorScheme.onSurface, size: 32),
+            const SizedBox(width: 16),
+            Expanded(
+              child: Text(
+                label,
+                style: TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w500,
+                  color: Theme.of(context).colorScheme.onSurface,
+                ),
+              ),
+            ),
+            Icon(Icons.chevron_right, color: Theme.of(context).colorScheme.onSurface, size: 24),
+          ],
+        ),
       ),
     );
   }

@@ -2,7 +2,13 @@ import 'package:fatechub2/view/view_conta.dart';
 import 'package:flutter/material.dart';
 
 class AppBarPadrao extends StatelessWidget implements PreferredSizeWidget {
-  const AppBarPadrao({super.key});
+  final String nomeUsuario;
+  
+  const AppBarPadrao({
+    super.key, 
+    required this.nomeUsuario,
+  });
+
 
   @override
   Size get preferredSize => const Size.fromHeight(kToolbarHeight);
@@ -46,8 +52,8 @@ class AppBarPadrao extends StatelessWidget implements PreferredSizeWidget {
               child: const Icon(Icons.person, color: Colors.white, size: 24),
             ),
             const SizedBox(width: 12),
-            const Text(
-              'Olá, Fulano',
+            Text(
+              'Olá, $nomeUsuario',
               style: TextStyle(
                 color: Colors.white,
                 fontSize: 20,

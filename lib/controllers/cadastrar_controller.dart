@@ -1,3 +1,4 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
  
@@ -81,22 +82,35 @@ class CadastroController extends ChangeNotifier {
  
   Future<void> cadastrar() async {
     if (!validar()) return;
- 
+
     _estado = CadastroEstado.carregando;
     _mensagemErro = null;
     notifyListeners();
- 
+
     try {
-      await FirebaseAuth.instance.createUserWithEmailAndPassword(
-        email: emailController.text.trim(),
-        password: senhaController.text.trim(),
-      );
- 
-      await FirebaseAuth.instance.currentUser?.updateDisplayName(
-        nomeController.text.trim(),
-      );
- 
+      // 1. Cria o usuário no Firebase Auth
+      final credencial = await FirebaseAuth.instance
+        .createUserWithEmailAndPassword(
+          email: emailController.text.trim(),
+          password: senhaController.text.trim(),
+        );
+
+      final uid = credencial.user!.uid;
+
+      // 2. Atualiza o nome no perfil do Auth
+      await credencial.user!.updateDisplayName(nomeController.text.trim());
+
+      // 3. Salva os dados extras no Firestore
+      await FirebaseFirestore.instance.collection('usuarios').doc(uid).set({
+        'uid': uid,
+        'nome': nomeController.text.trim(),
+        'ra': raController.text.trim(),
+        'email': emailController.text.trim(),
+        'criadoEm': FieldValue.serverTimestamp(),
+      });
+
       _estado = CadastroEstado.sucesso;
+
     } on FirebaseAuthException catch (e) {
       _estado = CadastroEstado.erro;
       _mensagemErro = _traduzirErro(e.code);
@@ -104,7 +118,7 @@ class CadastroController extends ChangeNotifier {
       _estado = CadastroEstado.erro;
       _mensagemErro = 'Erro inesperado. Tente novamente.';
     }
- 
+
     notifyListeners();
   }
  
