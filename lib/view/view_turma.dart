@@ -1,5 +1,4 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:fatechub2/widgets/app_bar.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 
@@ -75,17 +74,12 @@ List<Map<String, dynamic>> get _disciplinasFiltradas {
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting || !snapshot.hasData) {
           return Scaffold(
-            appBar: const AppBarPadrao(nomeUsuario: 'Carregando...'),
             body: const Center(child: CircularProgressIndicator()),
           );
         }
 
-        final dados = snapshot.data;
-        final nome = dados?['nome'] ?? 'Usuário';
-
         return Scaffold(
           backgroundColor: Theme.of(context).colorScheme.surfaceContainerLow,
-          appBar: AppBarPadrao(nomeUsuario: nome),
           body: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [

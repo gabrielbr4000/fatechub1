@@ -3,7 +3,6 @@ import 'package:fatechub2/view/view_acessibilidade.dart';
 import 'package:fatechub2/view/view_conta.dart';
 import 'package:fatechub2/view/view_login.dart';
 import 'package:fatechub2/controllers/theme_controller.dart';
-import 'package:fatechub2/widgets/app_bar.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 
@@ -31,18 +30,13 @@ class TelaConfiguracoes extends StatelessWidget {
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting || !snapshot.hasData) {
           return Scaffold(
-            appBar: const AppBarPadrao(nomeUsuario: 'Carregando...'),
             body: const Center(child: CircularProgressIndicator()),
           );
         }
 
-        final dados = snapshot.data;
-        final nome = dados?['nome'] ?? 'Usuário';
-
 
         return Scaffold(
           backgroundColor: Theme.of(context).colorScheme.surfaceContainerLow,
-          appBar: AppBarPadrao(nomeUsuario: nome),
           body: _buildBody(context),
         );
       }

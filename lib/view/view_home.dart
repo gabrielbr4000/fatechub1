@@ -1,7 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
-import 'package:fatechub2/widgets/app_bar.dart';
 
 Future<Map<String, dynamic>?> buscarDadosUsuario() async {
   final uid = FirebaseAuth.instance.currentUser?.uid;
@@ -25,18 +24,13 @@ class TelaHome extends StatelessWidget {
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting || !snapshot.hasData) {
           return Scaffold(
-            appBar: const AppBarPadrao(nomeUsuario: 'Carregando...'),
             body: const Center(child: CircularProgressIndicator()),
           );
         }
 
-        final dados = snapshot.data;
-        final nome = dados?['nome'] ?? 'Usuário';
-
 
         return Scaffold(
           backgroundColor: Theme.of(context).colorScheme.surfaceContainerLow,
-          appBar: AppBarPadrao(nomeUsuario: nome),
           body: SingleChildScrollView(
             padding: const EdgeInsets.all(16),
             child: Column(
@@ -150,7 +144,7 @@ class _MuralCardState extends State<_MuralCard> {
                 child: Text(
                   'Mural de Novidades',
                   style: TextStyle(
-                    color: Theme.of(context).colorScheme.onSurface,
+                    color: Colors.white,
                     fontSize: 13,
                     fontWeight: FontWeight.w600,
                     letterSpacing: 0.3,

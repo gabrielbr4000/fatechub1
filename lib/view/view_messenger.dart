@@ -1,20 +1,5 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:fatechub2/widgets/app_bar.dart';
-import 'package:fatechub2/view/view_chat.dart';
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
-
-Future<Map<String, dynamic>?> buscarDadosUsuario() async {
-  final uid = FirebaseAuth.instance.currentUser?.uid;
-  if (uid == null) return null;
-
-  final doc = await FirebaseFirestore.instance
-      .collection('usuarios')
-      .doc(uid)
-      .get();
-
-  return doc.data();
-}
+import 'view_chat.dart';
 
 class TelaMessenger extends StatefulWidget {
   const TelaMessenger({super.key});
@@ -26,23 +11,11 @@ class TelaMessenger extends StatefulWidget {
 class _TelaMessengerState extends State<TelaMessenger>
     with AutomaticKeepAliveClientMixin {
 
-  // Fazer essas conversas serem interativas e funcionais
+  // TODO: substituir por dados reais do Firestore futuramente
   final List<Map<String, dynamic>> _conversas = [
-    {
-      'nome': 'Prof. Isabelly',
-      'mensagem': 'Mensagens +3',
-      'cor': Colors.orange,
-    },
-    {
-      'nome': 'Lucas A.',
-      'mensagem': 'Visto',
-      'cor': Colors.blue,
-    },
-    {
-      'nome': 'Maria V.',
-      'mensagem': 'Mensagem 1',
-      'cor': Colors.green,
-    },
+    {'nome': 'Prof. Isabelly', 'mensagem': 'Mensagens +3', 'cor': Colors.orange},
+    {'nome': 'Lucas A.',       'mensagem': 'Visto',        'cor': Colors.blue},
+    {'nome': 'Maria V.',       'mensagem': 'Mensagem 1',   'cor': Colors.green},
   ];
 
   @override
@@ -52,26 +25,9 @@ class _TelaMessengerState extends State<TelaMessenger>
   Widget build(BuildContext context) {
     super.build(context);
 
-    return FutureBuilder<Map<String, dynamic>?>(
-      future: buscarDadosUsuario(),
-      builder: (context, snapshot) {
-        if (snapshot.connectionState == ConnectionState.waiting || !snapshot.hasData) {
-          return Scaffold(
-            appBar: const AppBarPadrao(nomeUsuario: 'Carregando...'),
-            body: const Center(child: CircularProgressIndicator()),
-          );
-        }
-
-        final dados = snapshot.data;
-        final nome = dados?['nome'] ?? 'Usuário';
-
-
-        return Scaffold(
-          backgroundColor: Theme.of(context).colorScheme.surfaceContainerLow,
-          appBar: AppBarPadrao(nomeUsuario: nome),
-          body: _buildBody(),
-        );
-      }
+    return Scaffold(
+      backgroundColor: Theme.of(context).colorScheme.surfaceContainerLow,
+      body: _buildBody(),
     );
   }
 
@@ -116,10 +72,14 @@ class _TelaMessengerState extends State<TelaMessenger>
               width: 32,
               height: 32,
               decoration: BoxDecoration(
-                color: Theme.of(context).colorScheme.surface,
+                color: Theme.of(context).colorScheme.surfaceContainerLow,
                 borderRadius: BorderRadius.circular(6),
               ),
-              child: Icon(Icons.add, color: Theme.of(context).colorScheme.onSurface, size: 22),
+              child: Icon(
+                Icons.add,
+                color: Theme.of(context).colorScheme.onSurface,
+                size: 22,
+              ),
             ),
             const SizedBox(width: 16),
             Expanded(
@@ -132,7 +92,11 @@ class _TelaMessengerState extends State<TelaMessenger>
                 ),
               ),
             ),
-            Icon(Icons.chevron_right, color: Theme.of(context).colorScheme.onSurface, size: 24),
+            Icon(
+              Icons.chevron_right,
+              color: Theme.of(context).colorScheme.onSurfaceVariant,
+              size: 24,
+            ),
           ],
         ),
       ),
@@ -141,17 +105,15 @@ class _TelaMessengerState extends State<TelaMessenger>
 
   Widget _buildConversaItem(Map<String, dynamic> conversa) {
     return GestureDetector(
-      onTap: () {
-        Navigator.push(
-          context,
-          MaterialPageRoute(
-            builder: (_) => TelaChat(
-              nomeContato: conversa['nome'] as String,
-              corAvatar: conversa['cor'] as Color,
-            ),
+      onTap: () => Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (_) => TelaChat(
+            nomeContato: conversa['nome'] as String,
+            corAvatar: conversa['cor'] as Color,
           ),
-        );
-      },
+        ),
+      ),
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
         decoration: BoxDecoration(
@@ -160,16 +122,19 @@ class _TelaMessengerState extends State<TelaMessenger>
         ),
         child: Row(
           children: [
-            Container(
-              width: 48,
-              height: 48,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                color: conversa['cor'] as Color,
+            // Avatar
+            CircleAvatar(
+              radius: 24,
+              backgroundColor: conversa['cor'] as Color,
+              child: Icon(
+                Icons.person,
+                color: Colors.white,
+                size: 26,
               ),
-              child: Icon(Icons.person, color: Theme.of(context).colorScheme.onSurface, size: 28),
             ),
             const SizedBox(width: 14),
+
+            // Nome e última mensagem
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -185,12 +150,20 @@ class _TelaMessengerState extends State<TelaMessenger>
                   const SizedBox(height: 2),
                   Text(
                     conversa['mensagem'] as String,
-                    style: TextStyle(fontSize: 13, color: Theme.of(context).colorScheme.onSurfaceVariant),
+                    style: TextStyle(
+                      fontSize: 13,
+                      color: Theme.of(context).colorScheme.onSurfaceVariant,
+                    ),
                   ),
                 ],
               ),
             ),
-            Icon(Icons.chevron_right, color: Theme.of(context).colorScheme.onSurface, size: 24),
+
+            Icon(
+              Icons.chevron_right,
+              color: Theme.of(context).colorScheme.onSurfaceVariant,
+              size: 24,
+            ),
           ],
         ),
       ),
