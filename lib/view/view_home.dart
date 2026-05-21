@@ -1,54 +1,30 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 
-Future<Map<String, dynamic>?> buscarDadosUsuario() async {
-  final uid = FirebaseAuth.instance.currentUser?.uid;
-  if (uid == null) return null;
-
-  final doc = await FirebaseFirestore.instance
-      .collection('usuarios')
-      .doc(uid)
-      .get();
-
-  return doc.data();
-}
 
 class TelaHome extends StatelessWidget {
   const TelaHome({super.key});
 
   @override
   Widget build(BuildContext context) {
-    return FutureBuilder<Map<String, dynamic>?>(
-      future: buscarDadosUsuario(),
-      builder: (context, snapshot) {
-        if (snapshot.connectionState == ConnectionState.waiting || !snapshot.hasData) {
-          return Scaffold(
-            body: const Center(child: CircularProgressIndicator()),
-          );
-        }
-
-
-        return Scaffold(
-          backgroundColor: Theme.of(context).colorScheme.surfaceContainerLow,
-          body: SingleChildScrollView(
-            padding: const EdgeInsets.all(16),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                _MuralCard(),
-                const SizedBox(height: 16),
-                _SecaoNoticias(),
-                const SizedBox(height: 16),
-                _SecaoAcessoRapido(),
-                const SizedBox(height: 16),
-              ],
-            ),
-          ),
-        );
-      }
+    return Scaffold(
+      backgroundColor: Theme.of(context).colorScheme.surfaceContainerLow,
+      body: SingleChildScrollView(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            _MuralCard(),
+            const SizedBox(height: 16),
+            _SecaoNoticias(),
+            const SizedBox(height: 16),
+            _SecaoAcessoRapido(),
+            const SizedBox(height: 16),
+          ],
+        ),
+      ),
     );
   }
+
 }
 
 // ─── Mural Card (Carrossel) ───────────────────────────────────────────────────
