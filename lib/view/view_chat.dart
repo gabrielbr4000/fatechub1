@@ -1,13 +1,18 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:fatechub2/services/chat_service.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 
 class TelaChat extends StatefulWidget {
   final String nomeContato;
   final Color corAvatar;
+  final String conversaId;
 
   const TelaChat({
     super.key,
     required this.nomeContato,
     required this.corAvatar,
+    required this.conversaId,
   });
 
   @override
@@ -17,30 +22,25 @@ class TelaChat extends StatefulWidget {
 class _TelaChatState extends State<TelaChat> {
   final TextEditingController _controller = TextEditingController();
   final ScrollController _scrollController = ScrollController();
+  final ChatService _chatService = ChatService();
+  final String _uidAtual = FirebaseAuth.instance.currentUser!.uid;
 
-  // Integrar com API futuramente
-  final List<_Mensagem> _mensagens = [];
-
-  void _enviarMensagem() {
+  void _enviarMensagem() async {
     final texto = _controller.text.trim();
     if (texto.isEmpty) return;
 
-    setState(() {
-      _mensagens.add(_Mensagem(
-        texto: texto,
-        euEnviei: true,
-        horario: _horarioAgora(),
-      ));
-    });
-
     _controller.clear();
 
+    await _chatService.enviarMensagem(widget.conversaId, texto);
+
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      _scrollController.animateTo(
-        _scrollController.position.maxScrollExtent,
-        duration: const Duration(milliseconds: 300),
-        curve: Curves.easeOut,
-      );
+      if (_scrollController.hasClients) {
+        _scrollController.animateTo(
+          _scrollController.position.maxScrollExtent,
+          duration: const Duration(milliseconds: 300),
+          curve: Curves.easeOut,
+        );
+      }
     });
   }
 
@@ -88,9 +88,10 @@ class _TelaChatState extends State<TelaChat> {
     );
   }
 
-  String _horarioAgora() {
-    final now = DateTime.now();
-    return '${now.hour.toString().padLeft(2, '0')}:${now.minute.toString().padLeft(2, '0')}';
+  String _formatarHorario(Timestamp? timestamp) {
+    if (timestamp == null) return '';
+    final dt = timestamp.toDate();
+    return '${dt.hour.toString().padLeft(2, '0')}:${dt.minute.toString().padLeft(2, '0')}';
   }
 
   @override
@@ -134,28 +135,38 @@ class _TelaChatState extends State<TelaChat> {
         ),
         actions: [
           PopupMenuButton<String>(
-          icon: const Icon(Icons.more_vert, color: Colors.white),
-          color: Theme.of(context).colorScheme.surface, // <- adiciona isso
-          onSelected: (value) {},
-          itemBuilder: (_) => const [
+            icon: const Icon(Icons.more_vert, color: Colors.white),
+            color: Theme.of(context).colorScheme.surface,
+            onSelected: (value) {},
+            itemBuilder: (_) => const [
               PopupMenuItem(value: 'perfil',   child: Text('Ver perfil')),
               PopupMenuItem(value: 'limpar',   child: Text('Limpar conversa')),
               PopupMenuItem(value: 'bloquear', child: Text('Bloquear')),
-           ],
-        ),
+            ],
+          ),
         ],
       ),
       body: Column(
         children: [
-          // ── Lista de mensagens / aviso vazio ──
+          // ── Lista de mensagens em tempo real ──
           Expanded(
-            child: _mensagens.isEmpty
-                ? Center(
+            child: StreamBuilder<QuerySnapshot>(
+              stream: _chatService.ouvirMensagens(widget.conversaId),
+              builder: (context, snapshot) {
+                if (snapshot.connectionState == ConnectionState.waiting) {
+                  return const Center(child: CircularProgressIndicator());
+                }
+
+                final mensagens = snapshot.data?.docs ?? [];
+
+                if (mensagens.isEmpty) {
+                  return Center(
                     child: Column(
                       mainAxisSize: MainAxisSize.min,
                       children: [
                         Icon(Icons.chat_bubble_outline,
-                            size: 48, color: Theme.of(context).colorScheme.onSurfaceVariant),
+                            size: 48,
+                            color: Theme.of(context).colorScheme.onSurfaceVariant),
                         const SizedBox(height: 12),
                         Text(
                           'Nenhuma mensagem ainda',
@@ -166,16 +177,38 @@ class _TelaChatState extends State<TelaChat> {
                         ),
                       ],
                     ),
-                  )
-                : ListView.builder(
-                    controller: _scrollController,
-                    padding: const EdgeInsets.symmetric(
-                        horizontal: 16, vertical: 12),
-                    itemCount: _mensagens.length,
-                    itemBuilder: (context, index) {
-                      return _BolhaMensagem(mensagem: _mensagens[index]);
-                    },
-                  ),
+                  );
+                }
+
+                // Rola para o final quando chegam novas mensagens
+                WidgetsBinding.instance.addPostFrameCallback((_) {
+                  if (_scrollController.hasClients) {
+                    _scrollController.animateTo(
+                      _scrollController.position.maxScrollExtent,
+                      duration: const Duration(milliseconds: 300),
+                      curve: Curves.easeOut,
+                    );
+                  }
+                });
+
+                return ListView.builder(
+                  controller: _scrollController,
+                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                  itemCount: mensagens.length,
+                  itemBuilder: (context, index) {
+                    final data = mensagens[index].data() as Map<String, dynamic>;
+                    final euEnviei = data['remetente'] == _uidAtual;
+                    final horario = _formatarHorario(data['horario'] as Timestamp?);
+
+                    return _BolhaMensagem(
+                      texto: data['texto'] ?? '',
+                      euEnviei: euEnviei,
+                      horario: horario,
+                    );
+                  },
+                );
+              },
+            ),
           ),
 
           // ── Campo de entrada ──
@@ -215,7 +248,8 @@ class _TelaChatState extends State<TelaChat> {
                       decoration: InputDecoration(
                         hintText: 'Digite uma mensagem...',
                         hintStyle: TextStyle(
-                            color: Theme.of(context).colorScheme.onSurfaceVariant, fontSize: 14),
+                            color: Theme.of(context).colorScheme.onSurfaceVariant,
+                            fontSize: 14),
                         filled: true,
                         fillColor: Theme.of(context).colorScheme.surfaceContainerLow,
                         contentPadding: const EdgeInsets.symmetric(
@@ -256,14 +290,18 @@ class _TelaChatState extends State<TelaChat> {
 // ─── Bolha de mensagem ────────────────────────────────────────────────────────
 
 class _BolhaMensagem extends StatelessWidget {
-  final _Mensagem mensagem;
+  final String texto;
+  final bool euEnviei;
+  final String horario;
 
-  const _BolhaMensagem({required this.mensagem});
+  const _BolhaMensagem({
+    required this.texto,
+    required this.euEnviei,
+    required this.horario,
+  });
 
   @override
   Widget build(BuildContext context) {
-    final euEnviei = mensagem.euEnviei;
-
     return Align(
       alignment: euEnviei ? Alignment.centerRight : Alignment.centerLeft,
       child: Container(
@@ -293,7 +331,7 @@ class _BolhaMensagem extends StatelessWidget {
               euEnviei ? CrossAxisAlignment.end : CrossAxisAlignment.start,
           children: [
             Text(
-              mensagem.texto,
+              texto,
               style: TextStyle(
                 fontSize: 14,
                 color: euEnviei ? Colors.white : const Color(0xFF212121),
@@ -301,7 +339,7 @@ class _BolhaMensagem extends StatelessWidget {
             ),
             const SizedBox(height: 4),
             Text(
-              mensagem.horario,
+              horario,
               style: TextStyle(
                 fontSize: 10,
                 color: euEnviei ? Colors.white60 : Colors.grey.shade500,
@@ -354,18 +392,4 @@ class _OpcaoAnexo extends StatelessWidget {
       ),
     );
   }
-}
-
-// ─── Modelo de mensagem ───────────────────────────────────────────────────────
-
-class _Mensagem {
-  final String texto;
-  final bool euEnviei;
-  final String horario;
-
-  const _Mensagem({
-    required this.texto,
-    required this.euEnviei,
-    required this.horario,
-  });
 }

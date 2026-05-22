@@ -1,6 +1,8 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:fatechub2/widgets/app_bar.dart';
+import 'package:fatechub2/services/chat_service.dart';
+import 'package:fatechub2/view/nova_conversa.dart';
 import 'package:fatechub2/view/view_chat.dart';
+import 'package:fatechub2/widgets/app_bar.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 
@@ -25,25 +27,8 @@ class TelaMessenger extends StatefulWidget {
 
 class _TelaMessengerState extends State<TelaMessenger>
     with AutomaticKeepAliveClientMixin {
-
-  // Fazer essas conversas serem interativas e funcionais
-  final List<Map<String, dynamic>> _conversas = [
-    {
-      'nome': 'Prof. Isabelly',
-      'mensagem': 'Mensagens +3',
-      'cor': Colors.orange,
-    },
-    {
-      'nome': 'Lucas A.',
-      'mensagem': 'Visto',
-      'cor': Colors.blue,
-    },
-    {
-      'nome': 'Maria V.',
-      'mensagem': 'Mensagem 1',
-      'cor': Colors.green,
-    },
-  ];
+  final ChatService _chatService = ChatService();
+  final String _uidAtual = FirebaseAuth.instance.currentUser!.uid;
 
   @override
   bool get wantKeepAlive => true;
@@ -55,55 +40,102 @@ class _TelaMessengerState extends State<TelaMessenger>
     return FutureBuilder<Map<String, dynamic>?>(
       future: buscarDadosUsuario(),
       builder: (context, snapshot) {
-        if (snapshot.connectionState == ConnectionState.waiting || !snapshot.hasData) {
+        if (snapshot.connectionState == ConnectionState.waiting ||
+            !snapshot.hasData) {
           return Scaffold(
             appBar: const AppBarPadrao(nomeUsuario: 'Carregando...'),
             body: const Center(child: CircularProgressIndicator()),
           );
         }
 
-        final dados = snapshot.data;
-        final nome = dados?['nome'] ?? 'Usuário';
-
+        final nome = snapshot.data?['nome'] ?? 'Usuário';
 
         return Scaffold(
           backgroundColor: Theme.of(context).colorScheme.surfaceContainerLow,
           appBar: AppBarPadrao(nomeUsuario: nome),
           body: _buildBody(),
         );
-      }
+      },
     );
   }
 
   Widget _buildBody() {
-    return ListView(
-      padding: const EdgeInsets.all(16),
-      children: [
-        _buildNovaConversa(),
-        const SizedBox(height: 12),
-        ..._conversas.map(
-          (conversa) => Padding(
-            padding: const EdgeInsets.only(bottom: 8),
-            child: _buildConversaItem(conversa),
-          ),
-        ),
-        const SizedBox(height: 24),
-        Center(
-          child: Text(
-            'Acabou as conversas abertas',
-            style: TextStyle(
-              color: Theme.of(context).colorScheme.onSurfaceVariant,
-              fontSize: 14,
-            ),
-          ),
-        ),
-      ],
+    return StreamBuilder<QuerySnapshot>(
+      stream: _chatService.ouvirConversas(),
+      builder: (context, snapshot) {
+        // ── Debug temporário ──
+        print('Estado: ${snapshot.connectionState}');
+        print('Erro: ${snapshot.error}');
+        print('Docs: ${snapshot.data?.docs.length}');
+
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return const Center(child: CircularProgressIndicator());
+        }
+
+        final conversas = snapshot.data?.docs ?? [];
+
+        return ListView(
+          padding: const EdgeInsets.all(16),
+          children: [
+            _buildNovaConversa(),
+            const SizedBox(height: 12),
+
+            if (conversas.isEmpty)
+              Padding(
+                padding: const EdgeInsets.only(top: 32),
+                child: Center(
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(Icons.chat_bubble_outline,
+                          size: 48,
+                          color: Theme.of(context).colorScheme.onSurfaceVariant),
+                      const SizedBox(height: 12),
+                      Text(
+                        'Nenhuma conversa ainda',
+                        style: TextStyle(
+                          fontSize: 14,
+                          color: Theme.of(context).colorScheme.onSurfaceVariant,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              )
+            else
+              ...conversas.map((doc) {
+                final data = doc.data() as Map<String, dynamic>;
+                final conversaId = doc.id;
+                final ultimaMensagem = data['ultimaMensagem'] ?? '';
+                final participantes = List<String>.from(data['participantes']);
+                final uidOutro = participantes.firstWhere(
+                  (uid) => uid != _uidAtual,
+                  orElse: () => '',
+                );
+
+                return Padding(
+                  padding: const EdgeInsets.only(bottom: 8),
+                  child: _buildConversaItem(
+                    conversaId: conversaId,
+                    uidOutro: uidOutro,
+                    ultimaMensagem: ultimaMensagem,
+                  ),
+                );
+              }),
+          ],
+        );
+      },
     );
   }
 
   Widget _buildNovaConversa() {
     return GestureDetector(
-      onTap: () {},
+      onTap: () {
+        Navigator.push(
+          context,
+          MaterialPageRoute(builder: (_) => const TelaNovaConversa()),
+        );
+      },
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 18),
         decoration: BoxDecoration(
@@ -119,7 +151,8 @@ class _TelaMessengerState extends State<TelaMessenger>
                 color: Theme.of(context).colorScheme.surface,
                 borderRadius: BorderRadius.circular(6),
               ),
-              child: Icon(Icons.add, color: Theme.of(context).colorScheme.onSurface, size: 22),
+              child: Icon(Icons.add,
+                  color: Theme.of(context).colorScheme.onSurface, size: 22),
             ),
             const SizedBox(width: 16),
             Expanded(
@@ -132,68 +165,90 @@ class _TelaMessengerState extends State<TelaMessenger>
                 ),
               ),
             ),
-            Icon(Icons.chevron_right, color: Theme.of(context).colorScheme.onSurface, size: 24),
+            Icon(Icons.chevron_right,
+                color: Theme.of(context).colorScheme.onSurface, size: 24),
           ],
         ),
       ),
     );
   }
 
-  Widget _buildConversaItem(Map<String, dynamic> conversa) {
-    return GestureDetector(
-      onTap: () {
-        Navigator.push(
-          context,
-          MaterialPageRoute(
-            builder: (_) => TelaChat(
-              nomeContato: conversa['nome'] as String,
-              corAvatar: conversa['cor'] as Color,
+  Widget _buildConversaItem({
+    required String conversaId,
+    required String uidOutro,
+    required String ultimaMensagem,
+  }) {
+    return FutureBuilder<Map<String, dynamic>?>(
+      future: _chatService.buscarUsuarioPorUid(uidOutro),
+      builder: (context, snapshot) {
+        final nome = snapshot.data?['nome'] ?? 'Usuário';
+
+        return GestureDetector(
+          onTap: () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (_) => TelaChat(
+                  nomeContato: nome,
+                  corAvatar: Colors.blueGrey,
+                  conversaId: conversaId,
+                ),
+              ),
+            );
+          },
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+            decoration: BoxDecoration(
+              color: Theme.of(context).colorScheme.surface,
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: Row(
+              children: [
+                Container(
+                  width: 48,
+                  height: 48,
+                  decoration: const BoxDecoration(
+                    shape: BoxShape.circle,
+                    color: Colors.blueGrey,
+                  ),
+                  child: const Icon(Icons.person, color: Colors.white, size: 28),
+                ),
+                const SizedBox(width: 14),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        nome,
+                        style: TextStyle(
+                          fontSize: 15,
+                          fontWeight: FontWeight.w600,
+                          color: Theme.of(context).colorScheme.onSurface,
+                        ),
+                      ),
+                      const SizedBox(height: 2),
+                      Text(
+                        ultimaMensagem.isEmpty
+                            ? 'Nenhuma mensagem'
+                            : ultimaMensagem,
+                        style: TextStyle(
+                          fontSize: 13,
+                          color:
+                              Theme.of(context).colorScheme.onSurfaceVariant,
+                        ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ],
+                  ),
+                ),
+                Icon(Icons.chevron_right,
+                    color: Theme.of(context).colorScheme.onSurface, size: 24),
+              ],
             ),
           ),
         );
       },
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-        decoration: BoxDecoration(
-          color: Theme.of(context).colorScheme.surface,
-          borderRadius: BorderRadius.circular(12),
-        ),
-        child: Row(
-          children: [
-            Container(
-              width: 48,
-              height: 48,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                color: conversa['cor'] as Color,
-              ),
-              child: Icon(Icons.person, color: Theme.of(context).colorScheme.onSurface, size: 28),
-            ),
-            const SizedBox(width: 14),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    conversa['nome'] as String,
-                    style: TextStyle(
-                      fontSize: 15,
-                      fontWeight: FontWeight.w600,
-                      color: Theme.of(context).colorScheme.onSurface,
-                    ),
-                  ),
-                  const SizedBox(height: 2),
-                  Text(
-                    conversa['mensagem'] as String,
-                    style: TextStyle(fontSize: 13, color: Theme.of(context).colorScheme.onSurfaceVariant),
-                  ),
-                ],
-              ),
-            ),
-            Icon(Icons.chevron_right, color: Theme.of(context).colorScheme.onSurface, size: 24),
-          ],
-        ),
-      ),
     );
   }
 }
