@@ -1,58 +1,33 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:firebase_auth/firebase_auth.dart';
-import 'package:flutter/material.dart';
 import 'package:fatechub2/widgets/app_bar.dart';
-
-Future<Map<String, dynamic>?> buscarDadosUsuario() async {
-  final uid = FirebaseAuth.instance.currentUser?.uid;
-  if (uid == null) return null;
-
-  final doc = await FirebaseFirestore.instance
-      .collection('usuarios')
-      .doc(uid)
-      .get();
-
-  return doc.data();
-}
+import 'package:flutter/material.dart';
 
 class TelaHome extends StatelessWidget {
-  const TelaHome({super.key});
+  final String nomeUsuario;
+
+  const TelaHome({super.key, required this.nomeUsuario});
 
   @override
   Widget build(BuildContext context) {
-    return FutureBuilder<Map<String, dynamic>?>(
-      future: buscarDadosUsuario(),
-      builder: (context, snapshot) {
-        if (snapshot.connectionState == ConnectionState.waiting || !snapshot.hasData) {
-          return Scaffold(
-            appBar: const AppBarPadrao(nomeUsuario: 'Carregando...'),
-            body: const Center(child: CircularProgressIndicator()),
-          );
-        }
-
-        final dados = snapshot.data;
-        final nome = dados?['nome'] ?? 'Usuário';
-
-
-        return Scaffold(
-          backgroundColor: Theme.of(context).colorScheme.surfaceContainerLow,
-          appBar: AppBarPadrao(nomeUsuario: nome),
-          body: SingleChildScrollView(
-            padding: const EdgeInsets.all(16),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                _MuralCard(),
-                const SizedBox(height: 16),
-                _SecaoNoticias(),
-                const SizedBox(height: 16),
-                _SecaoAcessoRapido(),
-                const SizedBox(height: 16),
-              ],
-            ),
+    return Scaffold(
+      backgroundColor: Theme.of(context).colorScheme.surfaceContainerLow,
+      appBar: AppBarPadrao(nomeUsuario: nomeUsuario),
+      body: Scrollbar(
+        thumbVisibility: true,
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.all(16),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              _MuralCard(),
+              const SizedBox(height: 16),
+              _SecaoNoticias(),
+              const SizedBox(height: 16),
+              _SecaoAcessoRapido(),
+              const SizedBox(height: 16),
+            ],
           ),
-        );
-      }
+        ),
+      ),
     );
   }
 }
@@ -143,14 +118,14 @@ class _MuralCardState extends State<_MuralCard> {
               top: 0, left: 0, right: 0,
               child: Container(
                 padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-                decoration: BoxDecoration(
-                  color: const Color(0xFF8B0000).withOpacity(0.9),
-                  borderRadius: const BorderRadius.vertical(top: Radius.circular(12)),
+                decoration: const BoxDecoration(
+                  color: Color(0xFF8B0000),
+                  borderRadius: BorderRadius.vertical(top: Radius.circular(12)),
                 ),
-                child: Text(
+                child: const Text(
                   'Mural de Novidades',
                   style: TextStyle(
-                    color: Theme.of(context).colorScheme.onSurface,
+                    color: Colors.white,
                     fontSize: 13,
                     fontWeight: FontWeight.w600,
                     letterSpacing: 0.3,
@@ -257,7 +232,7 @@ class _SecaoNoticias extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Padding(
-          padding: EdgeInsets.only(bottom: 10),
+          padding: const EdgeInsets.only(bottom: 10),
           child: Text(
             'Avisos Recentes',
             style: TextStyle(
@@ -268,12 +243,7 @@ class _SecaoNoticias extends StatelessWidget {
             ),
           ),
         ),
-        ...avisos.map(
-          (aviso) => ConstrainedBox(
-            constraints: const BoxConstraints(minHeight: 100), // tamanho mínimo
-            child: _CardAviso(aviso: aviso),
-          ),
-        ),
+        ...avisos.map((aviso) => _CardAviso(aviso: aviso)),
       ],
     );
   }
@@ -381,7 +351,7 @@ class _SecaoAcessoRapido extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Padding(
-          padding: EdgeInsets.only(bottom: 10),
+          padding: const EdgeInsets.only(bottom: 10),
           child: Text(
             'Acesso Rápido',
             style: TextStyle(

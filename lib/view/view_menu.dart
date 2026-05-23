@@ -1,54 +1,29 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:fatechub2/view/view_acessibilidade.dart';
 import 'package:fatechub2/view/view_conta.dart';
 import 'package:fatechub2/view/view_login.dart';
 import 'package:fatechub2/controllers/theme_controller.dart';
 import 'package:fatechub2/widgets/app_bar.dart';
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
-
-Future<Map<String, dynamic>?> buscarDadosUsuario() async {
-  final uid = FirebaseAuth.instance.currentUser?.uid;
-  if (uid == null) return null;
-
-  final doc = await FirebaseFirestore.instance
-      .collection('usuarios')
-      .doc(uid)
-      .get();
-
-  return doc.data();
-}
 
 class TelaConfiguracoes extends StatelessWidget {
   final ThemeController themeController;
- 
-  const TelaConfiguracoes({super.key, required this.themeController});
- 
+  final String nomeUsuario;
+
+  const TelaConfiguracoes({
+    super.key,
+    required this.themeController,
+    required this.nomeUsuario,
+  });
+
   @override
   Widget build(BuildContext context) {
-    return FutureBuilder<Map<String, dynamic>?>(
-      future: buscarDadosUsuario(),
-      builder: (context, snapshot) {
-        if (snapshot.connectionState == ConnectionState.waiting || !snapshot.hasData) {
-          return Scaffold(
-            appBar: const AppBarPadrao(nomeUsuario: 'Carregando...'),
-            body: const Center(child: CircularProgressIndicator()),
-          );
-        }
-
-        final dados = snapshot.data;
-        final nome = dados?['nome'] ?? 'Usuário';
-
-
-        return Scaffold(
-          backgroundColor: Theme.of(context).colorScheme.surfaceContainerLow,
-          appBar: AppBarPadrao(nomeUsuario: nome),
-          body: _buildBody(context),
-        );
-      }
+    return Scaffold(
+      backgroundColor: Theme.of(context).colorScheme.surfaceContainerLow,
+      appBar: AppBarPadrao(nomeUsuario: nomeUsuario),
+      body: _buildBody(context),
     );
   }
- 
+
   Widget _buildBody(BuildContext context) {
     return ListView(
       padding: const EdgeInsets.all(16),
@@ -68,9 +43,8 @@ class TelaConfiguracoes extends StatelessWidget {
           label: 'Acessibilidade',
           onTap: () => Navigator.of(context).push(
             MaterialPageRoute(
-              builder: (_) => TelaAcessibilidade(
-                themeController: themeController,
-              ),
+              builder: (_) =>
+                  TelaAcessibilidade(themeController: themeController),
             ),
           ),
         ),
@@ -88,9 +62,7 @@ class TelaConfiguracoes extends StatelessWidget {
           label: 'Log Out',
           onTap: () => Navigator.of(context).pushAndRemoveUntil(
             MaterialPageRoute(
-              builder: (_) => TelaLogin( // <- sem const
-                themeController: themeController,
-              ),
+              builder: (_) => TelaLogin(themeController: themeController),
             ),
             (route) => false,
           ),
@@ -98,7 +70,7 @@ class TelaConfiguracoes extends StatelessWidget {
       ],
     );
   }
- 
+
   Widget _buildItem({
     required BuildContext context,
     required IconData icone,
@@ -122,7 +94,8 @@ class TelaConfiguracoes extends StatelessWidget {
         ),
         child: Row(
           children: [
-            Icon(icone, color: Theme.of(context).colorScheme.onSurface, size: 32),
+            Icon(icone,
+                color: Theme.of(context).colorScheme.onSurface, size: 32),
             const SizedBox(width: 16),
             Expanded(
               child: Text(
@@ -134,7 +107,8 @@ class TelaConfiguracoes extends StatelessWidget {
                 ),
               ),
             ),
-            Icon(Icons.chevron_right, color: Theme.of(context).colorScheme.onSurface, size: 24),
+            Icon(Icons.chevron_right,
+                color: Theme.of(context).colorScheme.onSurface, size: 24),
           ],
         ),
       ),

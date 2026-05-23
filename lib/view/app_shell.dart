@@ -1,12 +1,13 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:fatechub2/controllers/navigation_controller.dart';
 import 'package:fatechub2/controllers/theme_controller.dart';
 import 'package:fatechub2/view/view_home.dart';
 import 'package:fatechub2/view/view_menu.dart';
 import 'package:fatechub2/view/view_messenger.dart';
 import 'package:fatechub2/view/view_turma.dart';
+import 'package:fatechub2/widgets/app_bar.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
-
-
 
 class AppShell extends StatefulWidget {
   final ThemeController themeController;
@@ -20,9 +21,7 @@ class AppShell extends StatefulWidget {
 class _AppShellState extends State<AppShell> {
   final NavigationController _navController = NavigationController();
   late final PageController _pageController;
-  late final List<Widget> _telas;
 
-  // Flag para evitar conflito entre nav bar e arrasto
   bool _navegandoProgramaticamente = false;
 
   static const List<_NavItem> _navItems = [
@@ -32,15 +31,18 @@ class _AppShellState extends State<AppShell> {
     _NavItem(icon: Icons.grid_view_outlined, label: 'Menu'),
   ];
 
+  Stream<DocumentSnapshot<Map<String, dynamic>>> _escutarDadosUsuario() {
+    final uid = FirebaseAuth.instance.currentUser?.uid;
+    if (uid == null) throw Exception("Usuário não autenticado");
+    return FirebaseFirestore.instance
+        .collection('usuarios')
+        .doc(uid)
+        .snapshots();
+  }
+
   @override
   void initState() {
     super.initState();
-    _telas = [
-      const TelaHome(),
-      const TelaMessenger(),
-      const TelaTurmas(),
-      TelaConfiguracoes(themeController: widget.themeController),
-    ];
     _pageController = PageController(initialPage: _navController.currentIndex);
 
     _navController.addListener(() {
@@ -66,21 +68,47 @@ class _AppShellState extends State<AppShell> {
 
   @override
   Widget build(BuildContext context) {
-    return ListenableBuilder(
-      listenable: _navController,
-      builder: (context, _) {
-        return Scaffold(
-          body: PageView(
-            controller: _pageController,
-            onPageChanged: (index) {
-              // Só atualiza o nav bar se o usuário arrastou (não programático)
-              if (!_navegandoProgramaticamente) {
-                _navController.goTo(index);
-              }
-            },
-            children: _telas,
+    return StreamBuilder<DocumentSnapshot<Map<String, dynamic>>>(
+      stream: _escutarDadosUsuario(),
+      builder: (context, usuarioSnapshot) {
+        if (usuarioSnapshot.connectionState == ConnectionState.waiting) {
+          return const Scaffold(
+            appBar: AppBarPadrao(nomeUsuario: 'Carregando...'),
+            body: Center(child: CircularProgressIndicator()),
+          );
+        }
+
+        final dados = usuarioSnapshot.data?.data();
+        final nomeUsuario = dados?['nome'] ?? 'Usuário';
+
+        final telas = [
+          TelaHome(nomeUsuario: nomeUsuario),
+          TelaMessenger(nomeUsuario: nomeUsuario),
+          TelaTurmas(nomeUsuario: nomeUsuario),
+          TelaConfiguracoes(
+            themeController: widget.themeController,
+            nomeUsuario: nomeUsuario,
           ),
-          bottomNavigationBar: _buildBottomNavBar(),
+        ];
+
+        return ListenableBuilder(
+          listenable: _navController,
+          builder: (context, _) {
+            return Scaffold(
+              backgroundColor:
+                  Theme.of(context).colorScheme.surfaceContainerLow,
+              body: PageView(
+                controller: _pageController,
+                onPageChanged: (index) {
+                  if (!_navegandoProgramaticamente) {
+                    _navController.goTo(index);
+                  }
+                },
+                children: telas,
+              ),
+              bottomNavigationBar: _buildBottomNavBar(),
+            );
+          },
         );
       },
     );
@@ -132,7 +160,7 @@ class _AppShellState extends State<AppShell> {
             Icon(
               item.icon,
               color: isSelected
-                ? Colors.white
+                  ? Colors.white
                   : Theme.of(context).colorScheme.onSurfaceVariant,
               size: 24,
             ),
@@ -140,11 +168,12 @@ class _AppShellState extends State<AppShell> {
             Text(
               item.label,
               style: TextStyle(
-                  fontSize: 11,
-                  fontWeight: isSelected ? FontWeight.w600 : FontWeight.w400,
-                  color: isSelected
+                fontSize: 11,
+                fontWeight:
+                    isSelected ? FontWeight.w600 : FontWeight.w400,
+                color: isSelected
                     ? Colors.white
-                      : Theme.of(context).colorScheme.onSurfaceVariant,
+                    : Theme.of(context).colorScheme.onSurfaceVariant,
               ),
             ),
           ],

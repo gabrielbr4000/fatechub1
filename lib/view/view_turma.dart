@@ -1,37 +1,24 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:fatechub2/widgets/app_bar.dart';
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 
 class TelaTurmas extends StatefulWidget {
-  const TelaTurmas({super.key});
+  final String nomeUsuario;
+
+  const TelaTurmas({super.key, required this.nomeUsuario});
 
   @override
   State<TelaTurmas> createState() => _TelaTurmasState();
 }
 
-Future<Map<String, dynamic>?> buscarDadosUsuario() async {
-  final uid = FirebaseAuth.instance.currentUser?.uid;
-  if (uid == null) return null;
-
-  final doc = await FirebaseFirestore.instance
-      .collection('usuarios')
-      .doc(uid)
-      .get();
-
-  return doc.data();
-}
-
-// Mixin adicionado para manter a tela salva
-class _TelaTurmasState extends State<TelaTurmas> 
+class _TelaTurmasState extends State<TelaTurmas>
     with AutomaticKeepAliveClientMixin {
   final TextEditingController _buscaController = TextEditingController();
   String _filtro = 'Todos';
   String _busca = '';
 
-  //  Interar com a API futuramente
-  final String _turmaAtual = 'Análise-e-Desenvolvimento-de-Sistemas-4-Semestre-Manhã-2';
-  //  Interar com a API futuramente
+  final String _turmaAtual =
+      'Análise-e-Desenvolvimento-de-Sistemas-4-Semestre-Manhã-2';
+
   final List<Map<String, dynamic>> _disciplinas = [
     {'nome': 'Engenharia de Software III', 'ativo': true},
     {'nome': 'Programação Orientada...', 'ativo': true},
@@ -41,22 +28,18 @@ class _TelaTurmasState extends State<TelaTurmas>
     {'nome': 'Programação para Disp...', 'ativo': true},
   ];
 
-List<Map<String, dynamic>> get _disciplinasFiltradas {
-  return _disciplinas.where((d) {
-    // Filtro ativo/inativo
-    final passaFiltro = switch (_filtro) {
-      'Ativos'   => d['ativo'] == true,
-      'Inativos' => d['ativo'] == false,
-      _          => true, // 'Todos'
-    };
-
-    // Filtro de busca
-    final passaBusca = _busca.isEmpty ||
-        (d['nome'] as String).toLowerCase().contains(_busca.toLowerCase());
-
-    return passaFiltro && passaBusca;
-  }).toList();
-}
+  List<Map<String, dynamic>> get _disciplinasFiltradas {
+    return _disciplinas.where((d) {
+      final passaFiltro = switch (_filtro) {
+        'Ativos' => d['ativo'] == true,
+        'Inativos' => d['ativo'] == false,
+        _ => true,
+      };
+      final passaBusca = _busca.isEmpty ||
+          (d['nome'] as String).toLowerCase().contains(_busca.toLowerCase());
+      return passaFiltro && passaBusca;
+    }).toList();
+  }
 
   @override
   void dispose() {
@@ -66,36 +49,21 @@ List<Map<String, dynamic>> get _disciplinasFiltradas {
 
   @override
   bool get wantKeepAlive => true;
- 
+
   @override
   Widget build(BuildContext context) {
     super.build(context);
-    return FutureBuilder<Map<String, dynamic>?>(
-      future: buscarDadosUsuario(),
-      builder: (context, snapshot) {
-        if (snapshot.connectionState == ConnectionState.waiting || !snapshot.hasData) {
-          return Scaffold(
-            appBar: const AppBarPadrao(nomeUsuario: 'Carregando...'),
-            body: const Center(child: CircularProgressIndicator()),
-          );
-        }
-
-        final dados = snapshot.data;
-        final nome = dados?['nome'] ?? 'Usuário';
-
-        return Scaffold(
-          backgroundColor: Theme.of(context).colorScheme.surfaceContainerLow,
-          appBar: AppBarPadrao(nomeUsuario: nome),
-          body: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              _buildNomeTurma(),
-              _buildBarraFiltros(),
-              Expanded(child: _buildGrid()),
-            ],
-          ),
-        );
-      }
+    return Scaffold(
+      backgroundColor: Theme.of(context).colorScheme.surfaceContainerLow,
+      appBar: AppBarPadrao(nomeUsuario: widget.nomeUsuario),
+      body: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          _buildNomeTurma(),
+          _buildBarraFiltros(),
+          Expanded(child: _buildGrid()),
+        ],
+      ),
     );
   }
 
@@ -122,7 +90,6 @@ List<Map<String, dynamic>> get _disciplinasFiltradas {
       padding: const EdgeInsets.fromLTRB(12, 0, 12, 12),
       child: Row(
         children: [
-          // Dropdown Todos
           Container(
             height: 38,
             padding: const EdgeInsets.symmetric(horizontal: 10),
@@ -147,8 +114,6 @@ List<Map<String, dynamic>> get _disciplinasFiltradas {
             ),
           ),
           const SizedBox(width: 8),
-
-          // Campo de busca
           Expanded(
             child: SizedBox(
               height: 38,
@@ -158,15 +123,20 @@ List<Map<String, dynamic>> get _disciplinasFiltradas {
                 style: const TextStyle(fontSize: 13),
                 decoration: InputDecoration(
                   hintText: 'Buscar',
-                  hintStyle: TextStyle(color: Theme.of(context).colorScheme.onSurface, fontSize: 13),
-                  contentPadding: const EdgeInsets.symmetric(horizontal: 12),
+                  hintStyle: TextStyle(
+                      color: Theme.of(context).colorScheme.onSurface,
+                      fontSize: 13),
+                  contentPadding:
+                      const EdgeInsets.symmetric(horizontal: 12),
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(6),
-                    borderSide: BorderSide(color: Theme.of(context).colorScheme.onSurfaceVariant),
+                    borderSide: BorderSide(
+                        color: Theme.of(context).colorScheme.onSurfaceVariant),
                   ),
                   enabledBorder: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(6),
-                    borderSide: BorderSide(color: Theme.of(context).colorScheme.onSurfaceVariant),
+                    borderSide: BorderSide(
+                        color: Theme.of(context).colorScheme.onSurfaceVariant),
                   ),
                   focusedBorder: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(6),
@@ -178,20 +148,21 @@ List<Map<String, dynamic>> get _disciplinasFiltradas {
             ),
           ),
           const SizedBox(width: 8),
-
-          // Botão ordenar
           Container(
             height: 38,
             padding: const EdgeInsets.symmetric(horizontal: 10),
             decoration: BoxDecoration(
-              border: Border.all(color: Theme.of(context).colorScheme.onSurfaceVariant),
+              border: Border.all(
+                  color: Theme.of(context).colorScheme.onSurfaceVariant),
               borderRadius: BorderRadius.circular(6),
               color: Theme.of(context).colorScheme.surface,
             ),
             child: Center(
               child: Text(
                 'Ordenar por',
-                style: TextStyle(fontSize: 12, color: Theme.of(context).colorScheme.onSurface),
+                style: TextStyle(
+                    fontSize: 12,
+                    color: Theme.of(context).colorScheme.onSurface),
               ),
             ),
           ),
@@ -207,7 +178,8 @@ List<Map<String, dynamic>> get _disciplinasFiltradas {
       return Center(
         child: Text(
           'Nenhuma disciplina encontrada.',
-          style: TextStyle(color: Theme.of(context).colorScheme.onSurface),
+          style:
+              TextStyle(color: Theme.of(context).colorScheme.onSurface),
         ),
       );
     }
@@ -244,26 +216,25 @@ List<Map<String, dynamic>> get _disciplinasFiltradas {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Área da imagem/thumbnail   (Adicionar opção para professor fazer upload de uma imagem futuramente)
             Expanded(
               child: Container(
                 decoration: const BoxDecoration(
                   color: Color(0xFFEEEEEE),
-                  borderRadius: BorderRadius.vertical(top: Radius.circular(8)),
+                  borderRadius:
+                      BorderRadius.vertical(top: Radius.circular(8)),
                 ),
                 child: Center(
                   child: Icon(
-                    Icons.image_outlined,         
+                    Icons.image_outlined,
                     color: Colors.grey[400],
                     size: 36,
                   ),
                 ),
               ),
             ),
-
-            // Nome da disciplina
             Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+              padding:
+                  const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
               child: Text(
                 disciplina['nome'] as String,
                 maxLines: 2,

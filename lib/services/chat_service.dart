@@ -80,13 +80,12 @@ class ChatService {
 
   // ─── Ouvir conversas do usuário logado ───────────────────────────────────
 
-  Stream<QuerySnapshot> ouvirConversas() {
-    return _db
-        .collection('conversas')
-        .where('participantes', arrayContains: _uidAtual)
-        .orderBy('ultimoHorario', descending: true)
-        .snapshots();
-  }
+ Stream<QuerySnapshot> ouvirConversas() {
+  return _db
+      .collection('conversas')
+      .where('participantes', arrayContains: _uidAtual)
+      .snapshots(); // <- sem orderBy por enquanto
+}
 
   // ─── Buscar dados de um usuário pelo UID ─────────────────────────────────
 

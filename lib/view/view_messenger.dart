@@ -6,20 +6,10 @@ import 'package:fatechub2/widgets/app_bar.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 
-Future<Map<String, dynamic>?> buscarDadosUsuario() async {
-  final uid = FirebaseAuth.instance.currentUser?.uid;
-  if (uid == null) return null;
-
-  final doc = await FirebaseFirestore.instance
-      .collection('usuarios')
-      .doc(uid)
-      .get();
-
-  return doc.data();
-}
-
 class TelaMessenger extends StatefulWidget {
-  const TelaMessenger({super.key});
+  final String nomeUsuario;
+
+  const TelaMessenger({super.key, required this.nomeUsuario});
 
   @override
   State<TelaMessenger> createState() => _TelaMessengerState();
@@ -36,26 +26,10 @@ class _TelaMessengerState extends State<TelaMessenger>
   @override
   Widget build(BuildContext context) {
     super.build(context);
-
-    return FutureBuilder<Map<String, dynamic>?>(
-      future: buscarDadosUsuario(),
-      builder: (context, snapshot) {
-        if (snapshot.connectionState == ConnectionState.waiting ||
-            !snapshot.hasData) {
-          return Scaffold(
-            appBar: const AppBarPadrao(nomeUsuario: 'Carregando...'),
-            body: const Center(child: CircularProgressIndicator()),
-          );
-        }
-
-        final nome = snapshot.data?['nome'] ?? 'Usuário';
-
-        return Scaffold(
-          backgroundColor: Theme.of(context).colorScheme.surfaceContainerLow,
-          appBar: AppBarPadrao(nomeUsuario: nome),
-          body: _buildBody(),
-        );
-      },
+    return Scaffold(
+      backgroundColor: Theme.of(context).colorScheme.surfaceContainerLow,
+      appBar: AppBarPadrao(nomeUsuario: widget.nomeUsuario),
+      body: _buildBody(),
     );
   }
 
@@ -63,11 +37,6 @@ class _TelaMessengerState extends State<TelaMessenger>
     return StreamBuilder<QuerySnapshot>(
       stream: _chatService.ouvirConversas(),
       builder: (context, snapshot) {
-        // ── Debug temporário ──
-        print('Estado: ${snapshot.connectionState}');
-        print('Erro: ${snapshot.error}');
-        print('Docs: ${snapshot.data?.docs.length}');
-
         if (snapshot.connectionState == ConnectionState.waiting) {
           return const Center(child: CircularProgressIndicator());
         }
@@ -148,11 +117,14 @@ class _TelaMessengerState extends State<TelaMessenger>
               width: 32,
               height: 32,
               decoration: BoxDecoration(
-                color: Theme.of(context).colorScheme.surface,
+                color: Theme.of(context).colorScheme.surfaceContainerLow,
                 borderRadius: BorderRadius.circular(6),
               ),
-              child: Icon(Icons.add,
-                  color: Theme.of(context).colorScheme.onSurface, size: 22),
+              child: Icon(
+                Icons.add,
+                color: Theme.of(context).colorScheme.onSurface,
+                size: 22,
+              ),
             ),
             const SizedBox(width: 16),
             Expanded(
@@ -165,8 +137,11 @@ class _TelaMessengerState extends State<TelaMessenger>
                 ),
               ),
             ),
-            Icon(Icons.chevron_right,
-                color: Theme.of(context).colorScheme.onSurface, size: 24),
+            Icon(
+              Icons.chevron_right,
+              color: Theme.of(context).colorScheme.onSurfaceVariant,
+              size: 24,
+            ),
           ],
         ),
       ),
@@ -204,14 +179,10 @@ class _TelaMessengerState extends State<TelaMessenger>
             ),
             child: Row(
               children: [
-                Container(
-                  width: 48,
-                  height: 48,
-                  decoration: const BoxDecoration(
-                    shape: BoxShape.circle,
-                    color: Colors.blueGrey,
-                  ),
-                  child: const Icon(Icons.person, color: Colors.white, size: 28),
+                CircleAvatar(
+                  radius: 24,
+                  backgroundColor: Colors.blueGrey,
+                  child: const Icon(Icons.person, color: Colors.white, size: 26),
                 ),
                 const SizedBox(width: 14),
                 Expanded(
@@ -233,8 +204,7 @@ class _TelaMessengerState extends State<TelaMessenger>
                             : ultimaMensagem,
                         style: TextStyle(
                           fontSize: 13,
-                          color:
-                              Theme.of(context).colorScheme.onSurfaceVariant,
+                          color: Theme.of(context).colorScheme.onSurfaceVariant,
                         ),
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
@@ -242,8 +212,11 @@ class _TelaMessengerState extends State<TelaMessenger>
                     ],
                   ),
                 ),
-                Icon(Icons.chevron_right,
-                    color: Theme.of(context).colorScheme.onSurface, size: 24),
+                Icon(
+                  Icons.chevron_right,
+                  color: Theme.of(context).colorScheme.onSurfaceVariant,
+                  size: 24,
+                ),
               ],
             ),
           ),
