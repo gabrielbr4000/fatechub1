@@ -104,6 +104,7 @@ class CadastroController extends ChangeNotifier {
       await FirebaseFirestore.instance.collection('usuarios').doc(uid).set({
         'uid': uid,
         'nome': nomeController.text.trim(),
+        'nomeLower': nomeController.text.trim().toLowerCase(), 
         'ra': raController.text.trim(),
         'email': emailController.text.trim(),
         'criadoEm': FieldValue.serverTimestamp(),

@@ -7,12 +7,14 @@ class TelaChat extends StatefulWidget {
   final String nomeContato;
   final Color corAvatar;
   final String conversaId;
+  final String uidOutro;
 
   const TelaChat({
     super.key,
     required this.nomeContato,
     required this.corAvatar,
     required this.conversaId,
+    required this.uidOutro,
   });
 
   @override
@@ -25,13 +27,20 @@ class _TelaChatState extends State<TelaChat> {
   final ChatService _chatService = ChatService();
   final String _uidAtual = FirebaseAuth.instance.currentUser!.uid;
 
+  @override
+  void initState() {
+    super.initState();
+    // Zera as mensagens não lidas ao abrir o chat
+    _chatService.zerarNaoLidas(widget.conversaId);
+  }
+
   void _enviarMensagem() async {
     final texto = _controller.text.trim();
     if (texto.isEmpty) return;
 
     _controller.clear();
 
-    await _chatService.enviarMensagem(widget.conversaId, texto);
+    await _chatService.enviarMensagem(widget.conversaId, texto, widget.uidOutro);
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (_scrollController.hasClients) {
@@ -148,7 +157,6 @@ class _TelaChatState extends State<TelaChat> {
       ),
       body: Column(
         children: [
-          // ── Lista de mensagens em tempo real ──
           Expanded(
             child: StreamBuilder<QuerySnapshot>(
               stream: _chatService.ouvirMensagens(widget.conversaId),
@@ -180,7 +188,6 @@ class _TelaChatState extends State<TelaChat> {
                   );
                 }
 
-                // Rola para o final quando chegam novas mensagens
                 WidgetsBinding.instance.addPostFrameCallback((_) {
                   if (_scrollController.hasClients) {
                     _scrollController.animateTo(
@@ -219,7 +226,6 @@ class _TelaChatState extends State<TelaChat> {
               top: false,
               child: Row(
                 children: [
-                  // Botão anexar
                   GestureDetector(
                     onTap: _anexarArquivo,
                     child: Container(
@@ -237,8 +243,6 @@ class _TelaChatState extends State<TelaChat> {
                     ),
                   ),
                   const SizedBox(width: 8),
-
-                  // Campo de texto
                   Expanded(
                     child: TextField(
                       controller: _controller,
@@ -263,8 +267,6 @@ class _TelaChatState extends State<TelaChat> {
                     ),
                   ),
                   const SizedBox(width: 8),
-
-                  // Botão enviar
                   GestureDetector(
                     onTap: _enviarMensagem,
                     child: Container(

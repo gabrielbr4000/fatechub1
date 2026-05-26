@@ -38,7 +38,8 @@ class _TelaNovaConversaState extends State<TelaNovaConversa> {
   }
 
   void _abrirConversa(Map<String, dynamic> usuario) async {
-    final conversaId = await _chatService.abrirOuCriarConversa(usuario['uid']);
+    final uidOutro = usuario['uid'] as String;
+    final conversaId = await _chatService.abrirOuCriarConversa(uidOutro);
 
     if (!mounted) return;
 
@@ -49,6 +50,7 @@ class _TelaNovaConversaState extends State<TelaNovaConversa> {
           nomeContato: usuario['nome'] ?? 'Usuário',
           corAvatar: Colors.blueGrey,
           conversaId: conversaId,
+          uidOutro: uidOutro,
         ),
       ),
     );
@@ -78,7 +80,6 @@ class _TelaNovaConversaState extends State<TelaNovaConversa> {
       ),
       body: Column(
         children: [
-          // ── Campo de busca ──
           Container(
             color: Theme.of(context).colorScheme.surface,
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
@@ -104,8 +105,6 @@ class _TelaNovaConversaState extends State<TelaNovaConversa> {
               ),
             ),
           ),
-
-          // ── Resultados ──
           Expanded(
             child: _carregando
                 ? const Center(child: CircularProgressIndicator())
@@ -168,8 +167,9 @@ class _TelaNovaConversaState extends State<TelaNovaConversa> {
                                   padding: const EdgeInsets.symmetric(
                                       horizontal: 16, vertical: 14),
                                   decoration: BoxDecoration(
-                                    color:
-                                        Theme.of(context).colorScheme.surface,
+                                    color: Theme.of(context)
+                                        .colorScheme
+                                        .surface,
                                     borderRadius: BorderRadius.circular(12),
                                   ),
                                   child: Row(

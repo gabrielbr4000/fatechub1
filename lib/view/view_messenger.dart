@@ -81,6 +81,8 @@ class _TelaMessengerState extends State<TelaMessenger>
                   (uid) => uid != _uidAtual,
                   orElse: () => '',
                 );
+                final naoLidas = (data['naoLidas'] as Map<String, dynamic>?)?[_uidAtual];
+                final qtdNaoLidas = (naoLidas is int) ? naoLidas : 0;
 
                 return Padding(
                   padding: const EdgeInsets.only(bottom: 8),
@@ -88,6 +90,7 @@ class _TelaMessengerState extends State<TelaMessenger>
                     conversaId: conversaId,
                     uidOutro: uidOutro,
                     ultimaMensagem: ultimaMensagem,
+                    qtdNaoLidas: qtdNaoLidas,
                   ),
                 );
               }),
@@ -152,6 +155,7 @@ class _TelaMessengerState extends State<TelaMessenger>
     required String conversaId,
     required String uidOutro,
     required String ultimaMensagem,
+    required int qtdNaoLidas,
   }) {
     return FutureBuilder<Map<String, dynamic>?>(
       future: _chatService.buscarUsuarioPorUid(uidOutro),
@@ -167,6 +171,7 @@ class _TelaMessengerState extends State<TelaMessenger>
                   nomeContato: nome,
                   corAvatar: Colors.blueGrey,
                   conversaId: conversaId,
+                  uidOutro: uidOutro,
                 ),
               ),
             );
@@ -179,12 +184,15 @@ class _TelaMessengerState extends State<TelaMessenger>
             ),
             child: Row(
               children: [
+                // Avatar
                 CircleAvatar(
                   radius: 24,
                   backgroundColor: Colors.blueGrey,
                   child: const Icon(Icons.person, color: Colors.white, size: 26),
                 ),
                 const SizedBox(width: 14),
+
+                // Nome e última mensagem
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -193,18 +201,23 @@ class _TelaMessengerState extends State<TelaMessenger>
                         nome,
                         style: TextStyle(
                           fontSize: 15,
-                          fontWeight: FontWeight.w600,
+                          fontWeight: qtdNaoLidas > 0
+                              ? FontWeight.w700
+                              : FontWeight.w600,
                           color: Theme.of(context).colorScheme.onSurface,
                         ),
                       ),
                       const SizedBox(height: 2),
                       Text(
-                        ultimaMensagem.isEmpty
-                            ? 'Nenhuma mensagem'
-                            : ultimaMensagem,
+                        ultimaMensagem.isEmpty ? 'Nenhuma mensagem' : ultimaMensagem,
                         style: TextStyle(
                           fontSize: 13,
-                          color: Theme.of(context).colorScheme.onSurfaceVariant,
+                          fontWeight: qtdNaoLidas > 0
+                              ? FontWeight.w600
+                              : FontWeight.normal,
+                          color: qtdNaoLidas > 0
+                              ? Theme.of(context).colorScheme.onSurface
+                              : Theme.of(context).colorScheme.onSurfaceVariant,
                         ),
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
@@ -212,11 +225,31 @@ class _TelaMessengerState extends State<TelaMessenger>
                     ],
                   ),
                 ),
-                Icon(
-                  Icons.chevron_right,
-                  color: Theme.of(context).colorScheme.onSurfaceVariant,
-                  size: 24,
-                ),
+
+                // Badge de não lidas
+                if (qtdNaoLidas > 0)
+                  Container(
+                    margin: const EdgeInsets.only(left: 8),
+                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFF8B0000),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Text(
+                      qtdNaoLidas > 99 ? '99+' : '$qtdNaoLidas',
+                      style: const TextStyle(
+                        fontSize: 11,
+                        fontWeight: FontWeight.w700,
+                        color: Colors.white,
+                      ),
+                    ),
+                  )
+                else
+                  Icon(
+                    Icons.chevron_right,
+                    color: Theme.of(context).colorScheme.onSurfaceVariant,
+                    size: 24,
+                  ),
               ],
             ),
           ),

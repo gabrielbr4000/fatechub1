@@ -10,10 +10,12 @@ class ChatService {
   // ─── Buscar usuários pelo nome ────────────────────────────────────────────
 
   Future<List<Map<String, dynamic>>> buscarUsuarios(String nome) async {
+    final nomeLower = nome.trim().toLowerCase();
+
     final resultado = await _db
         .collection('usuarios')
-        .where('nome', isGreaterThanOrEqualTo: nome)
-        .where('nome', isLessThanOrEqualTo: '$nome\uf8ff')
+        .where('nomeLower', isGreaterThanOrEqualTo: nomeLower)
+        .where('nomeLower', isLessThanOrEqualTo: '$nomeLower\uf8ff')
         .get();
 
     return resultado.docs
@@ -41,6 +43,7 @@ class ChatService {
       'participantes': [_uidAtual, uidOutro],
       'ultimaMensagem': '',
       'ultimoHorario': FieldValue.serverTimestamp(),
+      'naoLidas': {},
     });
 
     return novaConversa.id;
@@ -48,7 +51,7 @@ class ChatService {
 
   // ─── Enviar mensagem ──────────────────────────────────────────────────────
 
-  Future<void> enviarMensagem(String conversaId, String texto) async {
+  Future<void> enviarMensagem(String conversaId, String texto, String uidOutro) async {
     final horario = FieldValue.serverTimestamp();
 
     await _db
@@ -64,6 +67,15 @@ class ChatService {
     await _db.collection('conversas').doc(conversaId).update({
       'ultimaMensagem': texto,
       'ultimoHorario': horario,
+      'naoLidas.$uidOutro': FieldValue.increment(1), // incrementa para o destinatário
+    });
+  }
+
+  // ─── Zerar mensagens não lidas ao abrir o chat ───────────────────────────
+
+  Future<void> zerarNaoLidas(String conversaId) async {
+    await _db.collection('conversas').doc(conversaId).update({
+      'naoLidas.$_uidAtual': 0,
     });
   }
 
@@ -80,12 +92,12 @@ class ChatService {
 
   // ─── Ouvir conversas do usuário logado ───────────────────────────────────
 
- Stream<QuerySnapshot> ouvirConversas() {
-  return _db
-      .collection('conversas')
-      .where('participantes', arrayContains: _uidAtual)
-      .snapshots(); // <- sem orderBy por enquanto
-}
+  Stream<QuerySnapshot> ouvirConversas() {
+    return _db
+        .collection('conversas')
+        .where('participantes', arrayContains: _uidAtual)
+        .snapshots();
+  }
 
   // ─── Buscar dados de um usuário pelo UID ─────────────────────────────────
 
