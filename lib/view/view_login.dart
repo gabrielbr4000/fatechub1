@@ -131,7 +131,6 @@ class _TelaLoginState extends State<TelaLogin> {
   Widget _buildCampoEmail() {
     return TextField(
       controller: _controller.emailController,
-      keyboardType: TextInputType.number,
       onChanged: (_) => _controller.resetarErro(),
       decoration: _inputDecoration(),
     );
