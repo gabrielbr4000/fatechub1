@@ -66,7 +66,7 @@ String _traduzirErro(String code) {
 
   bool _validar() {
     if (emailController.text.trim().isEmpty) {
-      _mensagemErro = 'Informe o RA.';
+      _mensagemErro = 'Informe o EMAIL.';
       _estado = LoginEstado.erro;
       notifyListeners();
       return false;

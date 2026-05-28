@@ -1,5 +1,6 @@
 import 'package:fatechub2/view/view_esqueciSenha.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import '../controllers/login_controller.dart';
 import 'package:fatechub2/view/view_cadastrar.dart';
 import 'package:fatechub2/controllers/theme_controller.dart';
@@ -131,6 +132,7 @@ class _TelaLoginState extends State<TelaLogin> {
   Widget _buildCampoEmail() {
     return TextField(
       controller: _controller.emailController,
+      keyboardType: TextInputType.emailAddress,
       onChanged: (_) => _controller.resetarErro(),
       decoration: _inputDecoration(),
     );

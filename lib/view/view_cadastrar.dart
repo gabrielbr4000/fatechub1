@@ -135,7 +135,7 @@ class _TelaCadastroState extends State<TelaCadastro> {
   Widget _buildCampoNome() {
     return TextField(
       controller: _controller.nomeController,
-      keyboardType: TextInputType.number,
+      keyboardType: TextInputType.text,
       onChanged: (_) => _controller.resetarErro(),
       decoration: _inputDecoration(),
     );
@@ -144,7 +144,7 @@ class _TelaCadastroState extends State<TelaCadastro> {
   Widget _buildCampoEmail() {
     return TextField(
       controller: _controller.emailController,
-      keyboardType: TextInputType.number,
+      keyboardType: TextInputType.emailAddress,
       onChanged: (_) => _controller.resetarErro(),
       decoration: _inputDecoration(),
     );
