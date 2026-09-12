@@ -2,7 +2,7 @@
 
 Um aplicativo desenvolvido para solucionar a descentralização dos serviços da Fatec de Ribeirão Preto, trazendo comunicação e troca de dados de maneira mais eficiente.
 
-**Deploy:** https://fatechub-621ee.web.app/
+**Deploy:** https://fatechub-621ee.web.app/  
 **Equipe:** Vinicius Lavraldo de Brito (2840482421023) | Gabriel Masson Rosa (2840482421002) · Laboratório de Engenharia de Software · ADS Fatec Ribeirão Preto
 
 ## Stack
