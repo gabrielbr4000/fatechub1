@@ -1,5 +1,5 @@
 name: fatechub2
-description: "A new Flutter project."
+description: "Uma solução para a falta de comunicação."
 publish_to: 'none'
 version: 0.1.0+1
 
@@ -9,11 +9,16 @@ environment:
 dependencies:
   cloud_firestore: ^6.3.0
   device_preview_plus: ^2.6.1
+  firebase_storage: 13.5.0
   firebase_auth: ^6.4.0
   firebase_core: ^4.7.0
   flutter:
     sdk: flutter
   get_it: ^9.2.1
+  record: ^5.0.0
+  audioplayers: ^6.0.0
+  path_provider: ^2.0.0
+  web: ^1.0.0
 
 dev_dependencies:
   flutter_test:

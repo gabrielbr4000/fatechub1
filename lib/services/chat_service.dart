@@ -106,4 +106,34 @@ class ChatService {
     if (!doc.exists) return null;
     return {'uid': doc.id, ...doc.data()!};
   }
+
+  // ─── Enviar Áudios ─────────────────────────────────────────
+  Future<void> enviarAudio(
+    String conversaId,
+    String url,
+    String uidOutro,
+  ) async {
+    final uid = FirebaseAuth.instance.currentUser!.uid;
+    final ref = FirebaseFirestore.instance
+        .collection('conversas')
+        .doc(conversaId)
+        .collection('mensagens');
+
+    await ref.add({
+      'tipo': 'audio',      // <- diferencia de 'texto'
+      'url': url,           // <- URL do Firebase Storage
+      'remetente': uid,
+      'horario': FieldValue.serverTimestamp(),
+    });
+
+    // Atualiza última mensagem na conversa
+    await FirebaseFirestore.instance
+        .collection('conversas')
+        .doc(conversaId)
+        .update({
+      'ultimaMensagem': '🎵 Áudio',
+      'horarioUltimaMensagem': FieldValue.serverTimestamp(),
+      'naoLidas.$uidOutro': FieldValue.increment(1),
+    });
+  }
 }
