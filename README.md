@@ -28,12 +28,15 @@ Um aplicativo desenvolvido para solucionar a descentralização dos serviços da
 
 ## Estrutura do repositório
 ```
-/lib     —  /controllers/cadastrar_controller.dart
-                       /conta_controller.dart
-                       /login_controller.dart
-                       /navigation_controller.dart
-                       /theme_controller.dart
+/lib     —  /controllers/audio_controller.dart
+                        /cadastrar_controller.dart
+                        /conta_controller.dart
+                        /login_controller.dart
+                        /navigation_controller.dart
+                        /theme_controller.dart
             /services/chat_services.dart
+            /utils/audio_web_player.dart
+                  /blob_helper.dart
             /view/app_shell.dart
                  /nova_conversa.dart
                  /view_acessibilidade.dart
@@ -49,6 +52,8 @@ Um aplicativo desenvolvido para solucionar a descentralização dos serviços da
             /widgets/app_bar.dart
    /firebase_options.dart <- Esse arquivo faz a comunicação com o banco de dadps, por isso ele é sensível
    /main.dart
+
+/docs/images <- Na pasta 'docs' vão ser comitados os documentos e relatórios das Sprints
 ```
 
 ## Convenções da equipe

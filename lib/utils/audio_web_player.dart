@@ -3,8 +3,7 @@ import 'package:web/web.dart' as web;
 
 web.HTMLAudioElement? _audioElement;
 
-Future<void> reproduzirAudioWeb(String url) async {
-  // Para qualquer áudio anterior
+Future<void> reproduzirAudioWeb(String url, {void Function()? onEnd}) async {
   _audioElement?.pause();
   _audioElement = null;
 
@@ -12,6 +11,16 @@ Future<void> reproduzirAudioWeb(String url) async {
   audio.src = url;
   audio.controls = false;
   _audioElement = audio;
+
+  // Detecta fim da reprodução na web
+  if (onEnd != null) {
+    audio.addEventListener(
+      'ended',
+      (web.Event e) {
+        onEnd();
+      }.toJS,
+    );
+  }
 
   await audio.play().toDart;
 }

@@ -15,7 +15,7 @@ class AudioController extends ChangeNotifier {
   bool _gravando = false;
   bool _reproduzindo = false;
   bool _carregandoUpload = false;
-  String? _urlAtual; // URL sendo reproduzida no momento
+  String? _urlAtual;
 
   bool get gravando => _gravando;
   bool get reproduzindo => _reproduzindo;
@@ -23,7 +23,7 @@ class AudioController extends ChangeNotifier {
   String? get urlAtual => _urlAtual;
 
   AudioController() {
-    // Atualiza estado ao terminar de reproduzir
+    // Detecta fim da reprodução no mobile
     _player.onPlayerComplete.listen((_) {
       _reproduzindo = false;
       _urlAtual = null;
@@ -41,7 +41,6 @@ class AudioController extends ChangeNotifier {
     final path = kIsWeb ? '' : await _getCaminhoAudio();
 
     await _recorder.start(RecordConfig(encoder: encoder), path: path);
-
     _gravando = true;
     notifyListeners();
   }
@@ -59,13 +58,17 @@ class AudioController extends ChangeNotifier {
     notifyListeners();
   }
 
-  // ─── Upload para Firebase Storage ────────────────────────────────────────────
+  // ─── Upload ──────────────────────────────────────────────────────────────────
 
   Future<String?> uploadAudio(String caminhoOuBlob, String conversaId) async {
     _carregandoUpload = true;
     notifyListeners();
 
     try {
+      debugPrint('⬆️ Iniciando upload...');
+      debugPrint('📁 Caminho: $caminhoOuBlob');
+      debugPrint('🌐 É web: $kIsWeb');
+
       final nomeArquivo =
           'audio_${DateTime.now().millisecondsSinceEpoch}.${kIsWeb ? 'webm' : 'm4a'}';
       final ref = FirebaseStorage.instance
@@ -76,13 +79,19 @@ class AudioController extends ChangeNotifier {
 
       if (kIsWeb) {
         debugPrint('📦 Convertendo blob para bytes...');
-        final bytes = await fetchBlobBytes(caminhoOuBlob); // <- usa o helper
-        if (bytes == null) {
-          debugPrint('❌ Falha ao converter blob');
+        final bytes = await fetchBlobBytes(caminhoOuBlob);
+        debugPrint('📦 Bytes obtidos: ${bytes?.length ?? 'null'}');
+
+        if (bytes == null || bytes.isEmpty) {
+          debugPrint('❌ Bytes nulos ou vazios');
           return null;
         }
-        debugPrint('✅ Bytes obtidos: ${bytes.length} bytes');
-        await ref.putData(bytes, SettableMetadata(contentType: 'audio/webm'));
+
+        debugPrint('☁️ Enviando para o Storage...');
+        await ref.putData(
+          bytes,
+          SettableMetadata(contentType: 'audio/webm'),
+        );
       } else {
         await ref.putFile(
           File(caminhoOuBlob),
@@ -93,8 +102,9 @@ class AudioController extends ChangeNotifier {
       final url = await ref.getDownloadURL();
       debugPrint('✅ Upload concluído: $url');
       return url;
-    } catch (e) {
+    } catch (e, stack) {
       debugPrint('❌ Erro no upload: $e');
+      debugPrint('📋 Stack: $stack');
       return null;
     } finally {
       _carregandoUpload = false;
@@ -102,53 +112,58 @@ class AudioController extends ChangeNotifier {
     }
   }
 
-  // Converte blob URL para bytes (somente web)
-  Future<Uint8List?> _fetchBlobBytes(String blobUrl) async {
-    try {
-      // Usa XMLHttpRequest via dart:html na web
-      if (kIsWeb) {
-        // ignore: avoid_web_libraries_in_flutter
-        // Retorna null — implementar com dart:js_interop se necessário
-        debugPrint('Blob URL: $blobUrl');
-      }
-      return null;
-    } catch (e) {
-      return null;
-    }
-  }
-
   // ─── Reprodução ──────────────────────────────────────────────────────────────
 
-  Future<void> reproduzir(String url) async {
-  if (_reproduzindo && _urlAtual == url) {
-    await pausar();
-    return;
-  }
+  Future<void> reproduzir(String url, {VoidCallback? onEnd}) async {
+    if (_reproduzindo && _urlAtual == url) {
+      await pausar();
+      return;
+    }
 
-  _urlAtual = url;
-
-  if (kIsWeb) {
-    await reproduzirAudioWeb(url);
-  } else {
     await _player.stop();
-    await _player.play(UrlSource(url));
+    _urlAtual = url;
+
+    if (kIsWeb) {
+      await reproduzirAudioWeb(url, onEnd: () {
+        // Detecta fim na web
+        _reproduzindo = false;
+        _urlAtual = null;
+        notifyListeners();
+        onEnd?.call();
+      });
+    } else {
+      await _player.play(UrlSource(url));
+    }
+
+    _reproduzindo = true;
+    notifyListeners();
   }
 
-  _reproduzindo = true;
-  notifyListeners();
-}
-
-Future<void> pausar() async {
-  if (kIsWeb) {
-    pausarAudioWeb();
-  } else {
-    await _player.pause();
+  Future<void> pausar() async {
+    if (kIsWeb) {
+      pausarAudioWeb();
+    } else {
+      await _player.pause();
+    }
+    _reproduzindo = false;
+    notifyListeners();
   }
-  _reproduzindo = false;
-  notifyListeners();
-}
 
   bool estaReproduzindo(String url) => _reproduzindo && _urlAtual == url;
+
+  // ─── Deletar áudio do Storage ─────────────────────────────────────────────
+
+  Future<bool> deletarAudio(String url) async {
+    try {
+      final ref = FirebaseStorage.instance.refFromURL(url);
+      await ref.delete();
+      debugPrint('🗑️ Áudio deletado do Storage');
+      return true;
+    } catch (e) {
+      debugPrint('❌ Erro ao deletar áudio: $e');
+      return false;
+    }
+  }
 
   // ─── Helpers ─────────────────────────────────────────────────────────────────
 
