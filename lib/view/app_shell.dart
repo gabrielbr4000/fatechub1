@@ -82,14 +82,25 @@ class _AppShellState extends State<AppShell> {
         final nomeUsuario = dados?['nome'] ?? 'Usuário';
 
         final telas = [
-          TelaHome(nomeUsuario: nomeUsuario),
-          TelaMessenger(nomeUsuario: nomeUsuario),
-          TelaTurmas(nomeUsuario: nomeUsuario),
-          TelaConfiguracoes(
-            themeController: widget.themeController,
-            nomeUsuario: nomeUsuario,
-          ),
-        ];
+  TelaHome(nomeUsuario: nomeUsuario),
+
+  TelaMessenger(nomeUsuario: nomeUsuario),
+
+  Navigator(
+    onGenerateRoute: (settings) {
+      return MaterialPageRoute(
+        builder: (_) => TelaTurmas(
+          nomeUsuario: nomeUsuario,
+        ),
+      );
+    },
+  ),
+
+  TelaConfiguracoes(
+    themeController: widget.themeController,
+    nomeUsuario: nomeUsuario,
+  ),
+];
 
         return ListenableBuilder(
           listenable: _navController,
