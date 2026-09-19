@@ -1,6 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:fatechub2/services/notification_service.dart';
 
 enum LoginEstado { inicial, carregando, sucesso, erro }
 
@@ -37,6 +38,8 @@ class LoginController extends ChangeNotifier {
         email: emailController.text.trim(),
         password: senhaController.text.trim(),
       );
+
+      await NotificationService().inicializar();
 
       _estado = LoginEstado.sucesso;
 

@@ -3,11 +3,13 @@ import 'package:flutter/material.dart';
 
 class AppBarPadrao extends StatelessWidget implements PreferredSizeWidget {
   final String nomeUsuario;
-  
-  const AppBarPadrao({
-    super.key, 
-    required this.nomeUsuario,
-  });
+  final bool mostrarVoltar;
+
+const AppBarPadrao({
+  super.key,
+  required this.nomeUsuario,
+  this.mostrarVoltar = false,
+});
 
 
   @override
@@ -15,10 +17,15 @@ class AppBarPadrao extends StatelessWidget implements PreferredSizeWidget {
 
   @override
   Widget build(BuildContext context) {
-    return AppBar(
-      backgroundColor: const Color(0xFF8B0000),
-      elevation: 0,
-      automaticallyImplyLeading: false,
+   return AppBar(
+  backgroundColor: const Color(0xFF8B0000),
+  elevation: 0,
+  automaticallyImplyLeading: mostrarVoltar,
+
+  iconTheme: const IconThemeData(
+    color: Colors.white,
+  ),
+
       title: GestureDetector(
         onTap: () {
           bool isCurrent = false;
