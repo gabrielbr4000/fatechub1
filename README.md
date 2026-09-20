@@ -3,7 +3,7 @@
 Um aplicativo desenvolvido para solucionar a descentralização dos serviços da Fatec de Ribeirão Preto, trazendo comunicação e troca de dados de maneira mais eficiente.
 
 **Deploy:** https://fatechub-621ee.web.app/  
-**Equipe:** Vinicius Lavraldo de Brito (2840482421023) | Gabriel Masson Rosa (2840482421002) · Laboratório de Engenharia de Software · ADS Fatec Ribeirão Preto
+**Equipe:** Vinicius Lavraldo de Brito (RA 2840482421023) | Gabriel Masson Rosa (RA 2840482421002) · Laboratório de Engenharia de Software · ADS Fatec Ribeirão Preto
 
 ## Stack
 - Frontend: Flutter 3.47.2
@@ -43,17 +43,22 @@ Um aplicativo desenvolvido para solucionar a descentralização dos serviços da
                  /view_cadastrar.dart
                  /view_chat.dart
                  /view_conta.dart
+                 /view_criar_atividade.dart
+                 /view_detalhes_turma.dart
                  /view_esqueciSenha.dart
                  /view_home.dart
                  /view_login.dart
                  /view_menu.dart
                  /view_messenger.dart
+                 /view_todas_atividades.dart
                  /view_turma.dart
             /widgets/app_bar.dart
    /firebase_options.dart <- Esse arquivo faz a comunicação com o banco de dadps, por isso ele é sensível
    /main.dart
 
 /docs/images <- Na pasta 'docs' vão ser comitados os documentos e relatórios das Sprints
+     /videos
+     /Sprint1 
 ```
 
 ## Convenções da equipe
