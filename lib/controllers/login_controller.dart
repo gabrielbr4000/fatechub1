@@ -39,8 +39,6 @@ class LoginController extends ChangeNotifier {
         password: senhaController.text.trim(),
       );
 
-      await NotificationService().inicializar();
-
       _estado = LoginEstado.sucesso;
 
     } on FirebaseAuthException catch (e) {

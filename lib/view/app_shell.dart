@@ -8,6 +8,7 @@ import 'package:fatechub2/view/view_turma.dart';
 import 'package:fatechub2/widgets/app_bar.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:fatechub2/services/notification_service.dart';
 
 class AppShell extends StatefulWidget {
   final ThemeController themeController;
@@ -43,6 +44,7 @@ class _AppShellState extends State<AppShell> {
   @override
   void initState() {
     super.initState();
+    NotificationService().inicializar();
     _pageController = PageController(initialPage: _navController.currentIndex);
 
     _navController.addListener(() {

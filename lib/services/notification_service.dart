@@ -1,97 +1,78 @@
+import 'package:flutter/foundation.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
-import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 
 class NotificationService {
   final FirebaseMessaging _messaging = FirebaseMessaging.instance;
-  final FlutterLocalNotificationsPlugin _localNotifications =
-      FlutterLocalNotificationsPlugin();
 
   Future<void> inicializar() async {
-    // Pede permissão ao usuário
-    await _messaging.requestPermission(
-      alert: true,
-      badge: true,
-      sound: true,
-    );
+    try {
+      // Pede permissão — na web abre o popup do navegador
+      final settings = await _messaging.requestPermission(
+        alert: true,
+        badge: true,
+        sound: true,
+      );
 
-    // Configura notificações locais (Android)
-    const androidSettings =
-        AndroidInitializationSettings('@mipmap/ic_launcher');
-    const iosSettings = DarwinInitializationSettings();
-    await _localNotifications.initialize(
-      const InitializationSettings(
-        android: androidSettings,
-        iOS: iosSettings,
-      ),
-    );
+      if (settings.authorizationStatus == AuthorizationStatus.denied) {
+        debugPrint('⚠️ Notificações negadas pelo usuário');
+        return;
+      }
 
-    // Salva o token FCM do dispositivo no Firestore
-    await _salvarToken();
+      debugPrint('✅ Permissão: ${settings.authorizationStatus}');
 
-    // Atualiza o token quando ele for renovado
-    _messaging.onTokenRefresh.listen(_atualizarToken);
+      // Na web precisa passar a chave VAPID
+      String? token;
+      if (kIsWeb) {
+        token = await _messaging.getToken(
+          vapidKey: '', // <- USAR CHAVE VAPID DO FIREBASE CONSOLE
+        );
+      } else {
+        token = await _messaging.getToken();
+      }
 
-    // Notificação recebida com app em primeiro plano
-    FirebaseMessaging.onMessage.listen(_mostrarNotificacaoLocal);
+      if (token == null) {
+        debugPrint('❌ Token FCM nulo');
+        return;
+      }
 
-    // Notificação clicada com app em segundo plano
-    FirebaseMessaging.onMessageOpenedApp.listen(_onNotificacaoAberta);
+      debugPrint('✅ FCM Token: $token');
+      await _salvarToken(token);
+
+      // Atualiza token quando renovado
+      _messaging.onTokenRefresh.listen(_salvarToken);
+
+      // Notificação com app em primeiro plano
+      FirebaseMessaging.onMessage.listen((message) {
+        debugPrint('📬 Mensagem recebida: ${message.notification?.title}');
+        // Na web o browser já mostra a notificação pelo Service Worker
+        // No mobile mostramos manualmente
+        if (!kIsWeb) {
+          _mostrarNotificacaoLocal(message);
+        }
+      });
+
+    } catch (e) {
+      debugPrint('❌ Erro no NotificationService: $e');
+    }
   }
 
-  Future<void> _salvarToken() async {
+  Future<void> _salvarToken(String token) async {
     final uid = FirebaseAuth.instance.currentUser?.uid;
     if (uid == null) return;
-
-    final token = await _messaging.getToken();
-    if (token == null) return;
 
     await FirebaseFirestore.instance
         .collection('usuarios')
         .doc(uid)
         .update({'fcmToken': token});
 
-    debugPrint('✅ FCM Token salvo: $token');
+    debugPrint('✅ Token salvo no Firestore');
   }
 
-  Future<void> _atualizarToken(String token) async {
-    final uid = FirebaseAuth.instance.currentUser?.uid;
-    if (uid == null) return;
-
-    await FirebaseFirestore.instance
-        .collection('usuarios')
-        .doc(uid)
-        .update({'fcmToken': token});
-  }
-
-  Future<void> _mostrarNotificacaoLocal(RemoteMessage message) async {
-    final notification = message.notification;
-    if (notification == null) return;
-
-    const androidDetails = AndroidNotificationDetails(
-      'atividades_channel',
-      'Atividades',
-      channelDescription: 'Notificações de novas atividades',
-      importance: Importance.high,
-      priority: Priority.high,
-      color: Color(0xFF8B0000),
-    );
-
-    await _localNotifications.show(
-      notification.hashCode,
-      notification.title,
-      notification.body,
-      const NotificationDetails(
-        android: androidDetails,
-        iOS: DarwinNotificationDetails(),
-      ),
-    );
-  }
-
-  void _onNotificacaoAberta(RemoteMessage message) {
-    // TODO: navegar para a tela da atividade
-    debugPrint('Notificação aberta: ${message.data}');
+  void _mostrarNotificacaoLocal(RemoteMessage message) {
+    // Implementar com flutter_local_notifications para mobile
+    debugPrint('📬 ${message.notification?.title}: ${message.notification?.body}');
   }
 }
