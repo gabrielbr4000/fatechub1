@@ -6,6 +6,8 @@ import 'package:fatechub2/services/chat_service.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 
+final FocusNode _focusNode = FocusNode();
+
 class TelaChat extends StatefulWidget {
   final String nomeContato;
   final Color corAvatar;
@@ -25,7 +27,6 @@ class TelaChat extends StatefulWidget {
 }
 
 class _TelaChatState extends State<TelaChat> {
-  final TextEditingController _controller = TextEditingController();
   final ScrollController _scrollController = ScrollController();
   final ChatService _chatService = ChatService();
   final AudioController _audioController = AudioController();
@@ -35,27 +36,13 @@ class _TelaChatState extends State<TelaChat> {
   void initState() {
     super.initState();
     _chatService.zerarNaoLidas(widget.conversaId);
-    _controller.addListener(() => setState(() {}));
-    _audioController.addListener(() => setState(() {}));
   }
 
   @override
   void dispose() {
-    _controller.dispose();
     _scrollController.dispose();
     _audioController.dispose();
     super.dispose();
-  }
-
-  // ─── Texto ───────────────────────────────────────────────────────────────────
-
-  Future<void> _enviarMensagem() async {
-    final texto = _controller.text.trim();
-    if (texto.isEmpty) return;
-    _controller.clear();
-    await _chatService.enviarMensagem(
-        widget.conversaId, texto, widget.uidOutro);
-    _rolarParaBaixo();
   }
 
   // ─── Áudio ───────────────────────────────────────────────────────────────────
@@ -317,16 +304,83 @@ class _TelaChatState extends State<TelaChat> {
             duration: const Duration(milliseconds: 150),
             padding: EdgeInsets.only(
                 bottom: MediaQuery.of(context).viewInsets.bottom),
-            child: _buildInputBar(),
+            child: _InputBarChat(
+              audioController: _audioController,
+              onEnviarTexto: (texto) async {
+                await _chatService.enviarMensagem(
+                    widget.conversaId, texto, widget.uidOutro);
+                _rolarParaBaixo();
+              },
+              onIniciarGravacao: _iniciarGravacao,
+              onPararGravacao: _pararEEnviarAudio,
+              onCancelarGravacao: _cancelarGravacao,
+              onAnexar: _anexarArquivo,
+            ),
           ),
         ],
       ),
     );
   }
 
-  Widget _buildInputBar() {
-    final gravando = _audioController.gravando;
-    final carregando = _audioController.carregandoUpload;
+}
+
+// ─── Barra de input isolada ───────────────────────────────────────────────────
+
+class _InputBarChat extends StatefulWidget {
+  final AudioController audioController;
+  final Future<void> Function(String texto) onEnviarTexto;
+  final Future<void> Function() onIniciarGravacao;
+  final Future<void> Function() onPararGravacao;
+  final Future<void> Function() onCancelarGravacao;
+  final VoidCallback onAnexar;
+
+  const _InputBarChat({
+    required this.audioController,
+    required this.onEnviarTexto,
+    required this.onIniciarGravacao,
+    required this.onPararGravacao,
+    required this.onCancelarGravacao,
+    required this.onAnexar,
+  });
+
+  @override
+  State<_InputBarChat> createState() => _InputBarChatState();
+}
+
+class _InputBarChatState extends State<_InputBarChat> {
+  final TextEditingController _controller = TextEditingController();
+
+  @override
+  void initState() {
+    super.initState();
+    _controller.addListener(() => setState(() {}));
+    widget.audioController.addListener(_onAudioChanged);
+  }
+
+  void _onAudioChanged() {
+    if (mounted) setState(() {});
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    _focusNode.dispose();
+    widget.audioController.removeListener(_onAudioChanged);
+    super.dispose();
+  }
+
+  Future<void> _enviar() async {
+    final texto = _controller.text.trim();
+    if (texto.isEmpty) return;
+    _controller.clear();
+    await widget.onEnviarTexto(texto);
+    _focusNode.requestFocus();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final gravando = widget.audioController.gravando;
+    final carregando = widget.audioController.carregandoUpload;
     final temTexto = _controller.text.trim().isNotEmpty;
 
     return Container(
@@ -338,22 +392,20 @@ class _TelaChatState extends State<TelaChat> {
           children: [
             if (gravando)
               GestureDetector(
-                onTap: _cancelarGravacao,
+                onTap: widget.onCancelarGravacao,
                 child: const Padding(
                   padding: EdgeInsets.only(right: 8),
-                  child: Icon(Icons.delete_outline,
-                      color: Colors.red, size: 26),
+                  child: Icon(Icons.delete_outline, color: Colors.red, size: 26),
                 ),
               ),
             if (!gravando && !carregando) ...[
               GestureDetector(
-                onTap: _anexarArquivo,
+                onTap: widget.onAnexar,
                 child: Container(
                   width: 38,
                   height: 38,
                   decoration: BoxDecoration(
-                    color:
-                        const Color(0xFF8B0000).withValues(alpha: 0.1),
+                    color: const Color(0xFF8B0000).withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(10),
                   ),
                   child: const Icon(Icons.attach_file,
@@ -369,9 +421,12 @@ class _TelaChatState extends State<TelaChat> {
                       ? _buildIndicadorGravacao()
                       : TextField(
                           controller: _controller,
+                          focusNode: _focusNode,
                           minLines: 1,
                           maxLines: 4,
                           textCapitalization: TextCapitalization.sentences,
+                          textInputAction: TextInputAction.send,
+                          onSubmitted: (_) => _enviar(),
                           decoration: InputDecoration(
                             hintText: 'Digite uma mensagem...',
                             hintStyle: TextStyle(
@@ -390,27 +445,23 @@ class _TelaChatState extends State<TelaChat> {
                               borderSide: BorderSide.none,
                             ),
                           ),
-                          onSubmitted: (_) => _enviarMensagem(),
                         ),
             ),
             const SizedBox(width: 8),
             if (!carregando)
               GestureDetector(
-                onTap:
-                    temTexto && !gravando ? _enviarMensagem : null,
+                onTap: temTexto && !gravando ? _enviar : null,
                 onLongPressStart: !temTexto && !gravando
-                    ? (_) => _iniciarGravacao()
+                    ? (_) => widget.onIniciarGravacao()
                     : null,
                 onLongPressEnd:
-                    gravando ? (_) => _pararEEnviarAudio() : null,
+                    gravando ? (_) => widget.onPararGravacao() : null,
                 child: AnimatedContainer(
                   duration: const Duration(milliseconds: 200),
                   width: 38,
                   height: 38,
                   decoration: BoxDecoration(
-                    color: gravando
-                        ? Colors.red
-                        : const Color(0xFF8B0000),
+                    color: gravando ? Colors.red : const Color(0xFF8B0000),
                     borderRadius: BorderRadius.circular(10),
                   ),
                   child: Icon(
@@ -443,8 +494,7 @@ class _TelaChatState extends State<TelaChat> {
           const Icon(Icons.mic, color: Colors.red, size: 18),
           const SizedBox(width: 8),
           Text('Gravando... solte para enviar',
-              style:
-                  TextStyle(color: Colors.red.shade700, fontSize: 13)),
+              style: TextStyle(color: Colors.red.shade700, fontSize: 13)),
         ],
       ),
     );
@@ -851,8 +901,9 @@ class _BarraOndasAnimadaState extends State<_BarraOndasAnimada> {
         );
       }),
         );
+      }
   }
-}
+
 
 // ─── Opção do bottom sheet de anexo ──────────────────────────────────────────
 
