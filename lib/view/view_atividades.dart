@@ -3,6 +3,7 @@ import 'package:fatechub2/widgets/app_bar.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:fatechub2/view/view_criar_atividade.dart';
+import 'view_atividadeEntregar.dart';
 
 class TelaAtividades extends StatefulWidget {
   final String nomeUsuario;
@@ -302,12 +303,20 @@ class _TelaAtividadesState extends State<TelaAtividades> {
 
       child: InkWell(
         onTap: () {
-          _mostrarDetalhes(
-            id: id,
-            nome: nome,
-            dataEntrega: dataEntrega,
-            entregue: entregue,
-            descricao: descricao,
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (_) => TelaAtividade(
+                nomeUsuario: widget.nomeUsuario,
+                nomeTurma: widget.nomeTurma,
+                atividadeId: id,
+                nome: nome,
+                dataEntrega: dataEntrega,
+                descricao: descricao,
+                disciplina: widget.disciplina,
+                isProfessor: _perfil == 'professor',
+              ),
+            ),
           );
         },
 
