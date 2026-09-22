@@ -1,6 +1,6 @@
-#Relatório Individual de Contribuição — Sprint 1 — Vinicius Lavraldo de Brito (RA 2840482421023)
+# Relatório Individual de Contribuição — Sprint 1 — Vinicius Lavraldo de Brito (RA 2840482421023)
 
-**Papel nesta sprint:**Responsável pela implementação dos perfis de aluno e professor, além do desenvolvimento de funcionalidades relacionadas à seção “Turmas” para esses perfis
+**Papel nesta sprint:** Responsável pela implementação dos perfis de aluno e professor, além do desenvolvimento de funcionalidades relacionadas à seção “Turmas” para esses perfis
 
 ## 1. O que fiz
 | Item | PR/commit | Status |
