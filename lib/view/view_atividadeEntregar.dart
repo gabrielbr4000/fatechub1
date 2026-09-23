@@ -79,7 +79,7 @@ class _TelaAtividadeState extends State<TelaAtividade> {
 
   Future<void> _enviarLink() async {
     final link = _linkController.text.trim();
-    
+
     // A validação que impedia o envio se o link estivesse vazio foi removida.
 
     setState(() => _enviando = true);
@@ -132,11 +132,11 @@ class _TelaAtividadeState extends State<TelaAtividade> {
         .collection('entregas')
         .doc(_uidAtual)
         .set({
-      'uid': _uidAtual,
-      'tipo': tipo,
-      'valor': valor,
-      'entregueEm': FieldValue.serverTimestamp(),
-    });
+          'uid': _uidAtual,
+          'tipo': tipo,
+          'valor': valor,
+          'entregueEm': FieldValue.serverTimestamp(),
+        });
 
     // Atualiza o campo 'entregue' na atividade
     await FirebaseFirestore.instance
@@ -163,17 +163,21 @@ class _TelaAtividadeState extends State<TelaAtividade> {
   Future<void> _cancelarEntrega() async {
     final confirmar = await showDialog<bool>(
       context: context,
-      builder: (_) => AlertDialog(
+      builder: (dialogContext) => AlertDialog(
+        // <- use dialogContext aqui
         title: const Text('Cancelar entrega?'),
         content: const Text(
-            'Deseja remover sua entrega? Você poderá enviar novamente.'),
+          'Deseja remover sua entrega? Você poderá enviar novamente.',
+        ),
         actions: [
           TextButton(
-            onPressed: () => Navigator.pop(context, false),
+            onPressed: () =>
+                Navigator.of(dialogContext).pop(false), // <- dialogContext
             child: Text('Não', style: TextStyle(color: Colors.grey[600])),
           ),
           ElevatedButton(
-            onPressed: () => Navigator.pop(context, true),
+            onPressed: () =>
+                Navigator.of(dialogContext).pop(true), // <- dialogContext
             style: ElevatedButton.styleFrom(
               backgroundColor: const Color(0xFF8B0000),
               foregroundColor: Colors.white,
@@ -185,30 +189,52 @@ class _TelaAtividadeState extends State<TelaAtividade> {
     );
 
     if (confirmar != true) return;
+    if (!mounted) return; // <- verifica antes de continuar
 
-    await FirebaseFirestore.instance
-        .collection('turmas')
-        .doc(widget.nomeTurma)
-        .collection('atividades')
-        .doc(widget.atividadeId)
-        .collection('entregas')
-        .doc(_uidAtual)
-        .delete();
+    try {
+      await FirebaseFirestore.instance
+          .collection('turmas')
+          .doc(widget.nomeTurma)
+          .collection('atividades')
+          .doc(widget.atividadeId)
+          .collection('entregas')
+          .doc(_uidAtual)
+          .delete();
 
-    await FirebaseFirestore.instance
-        .collection('turmas')
-        .doc(widget.nomeTurma)
-        .collection('atividades')
-        .doc(widget.atividadeId)
-        .update({'entregue': false});
+      if (!mounted) return;
 
-    if (!mounted) return;
+      final entregas = await FirebaseFirestore.instance
+          .collection('turmas')
+          .doc(widget.nomeTurma)
+          .collection('atividades')
+          .doc(widget.atividadeId)
+          .collection('entregas')
+          .get();
 
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Entrega cancelada.')),
-    );
+      if (!mounted) return;
 
-    await _carregarEntrega();
+      if (entregas.docs.isEmpty) {
+        await FirebaseFirestore.instance
+            .collection('turmas')
+            .doc(widget.nomeTurma)
+            .collection('atividades')
+            .doc(widget.atividadeId)
+            .update({'entregue': false});
+      }
+
+      if (!mounted) return;
+
+      setState(() => _entregaAtual = null);
+
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('Entrega cancelada.')));
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Erro ao cancelar entrega.')),
+      );
+    }
   }
 
   // ─── Build ────────────────────────────────────────────────────────────────
@@ -235,14 +261,12 @@ class _TelaAtividadeState extends State<TelaAtividade> {
               _carregandoEntrega
                   ? const Center(child: CircularProgressIndicator())
                   : _entregaAtual != null
-                      ? _buildEntregaRealizada()
-                      : _buildFormEntrega(),
+                  ? _buildEntregaRealizada()
+                  : _buildFormEntrega(),
             ],
 
             // Seção de entregas (só para professor)
-            if (widget.isProfessor) ...[
-              _buildListaEntregasProfessor(),
-            ],
+            if (widget.isProfessor) ...[_buildListaEntregasProfessor()],
           ],
         ),
       ),
@@ -292,8 +316,11 @@ class _TelaAtividadeState extends State<TelaAtividade> {
           // Data de entrega
           Row(
             children: [
-              const Icon(Icons.calendar_today_outlined,
-                  size: 16, color: Color(0xFF8B0000)),
+              const Icon(
+                Icons.calendar_today_outlined,
+                size: 16,
+                color: Color(0xFF8B0000),
+              ),
               const SizedBox(width: 6),
               Text(
                 'Data de entrega: ${widget.dataEntrega}',
@@ -377,10 +404,11 @@ class _TelaAtividadeState extends State<TelaAtividade> {
                   ),
                   prefixIcon: const Icon(Icons.link, size: 20),
                   filled: true,
-                  fillColor:
-                      Theme.of(context).colorScheme.surfaceContainerLow,
+                  fillColor: Theme.of(context).colorScheme.surfaceContainerLow,
                   contentPadding: const EdgeInsets.symmetric(
-                      horizontal: 12, vertical: 12),
+                    horizontal: 12,
+                    vertical: 12,
+                  ),
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(8),
                     borderSide: BorderSide.none,
@@ -388,7 +416,9 @@ class _TelaAtividadeState extends State<TelaAtividade> {
                   focusedBorder: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(8),
                     borderSide: const BorderSide(
-                        color: Color(0xFF8B0000), width: 1.5),
+                      color: Color(0xFF8B0000),
+                      width: 1.5,
+                    ),
                   ),
                 ),
               ),
@@ -427,7 +457,9 @@ class _TelaAtividadeState extends State<TelaAtividade> {
                         width: 17,
                         height: 17,
                         child: CircularProgressIndicator(
-                            strokeWidth: 2, color: Colors.white),
+                          strokeWidth: 2,
+                          color: Colors.white,
+                        ),
                       )
                     : const Icon(Icons.send, size: 19),
                 label: Text(_enviando ? 'Enviando...' : 'Enviar'),
@@ -505,7 +537,9 @@ class _TelaAtividadeState extends State<TelaAtividade> {
             child: Row(
               children: [
                 Icon(
-                  tipo == 'texto' ? Icons.check : (tipo == 'link' ? Icons.link : Icons.attach_file),
+                  tipo == 'texto'
+                      ? Icons.check
+                      : (tipo == 'link' ? Icons.link : Icons.attach_file),
                   size: 20,
                   color: const Color(0xFF8B0000),
                 ),
@@ -635,17 +669,15 @@ class _TelaAtividadeState extends State<TelaAtividade> {
     }
 
     return FutureBuilder<DocumentSnapshot>(
-      future: FirebaseFirestore.instance
-          .collection('usuarios')
-          .doc(uid)
-          .get(),
+      future: FirebaseFirestore.instance.collection('usuarios').doc(uid).get(),
       builder: (context, snapshot) {
         final data = snapshot.data?.data() as Map<String, dynamic>?;
-        final nomeAluno = (snapshot.connectionState == ConnectionState.done &&
-            snapshot.data != null &&
-            snapshot.data!.exists)
-          ? (data?['nome'] as String?) ?? uid
-          : uid;
+        final nomeAluno =
+            (snapshot.connectionState == ConnectionState.done &&
+                snapshot.data != null &&
+                snapshot.data!.exists)
+            ? (data?['nome'] as String?) ?? uid
+            : uid;
 
         return Container(
           margin: const EdgeInsets.only(bottom: 8),
@@ -670,8 +702,11 @@ class _TelaAtividadeState extends State<TelaAtividade> {
                   color: const Color(0xFF8B0000).withValues(alpha: 0.1),
                   shape: BoxShape.circle,
                 ),
-                child: const Icon(Icons.person,
-                    color: Color(0xFF8B0000), size: 22),
+                child: const Icon(
+                  Icons.person,
+                  color: Color(0xFF8B0000),
+                  size: 22,
+                ),
               ),
               const SizedBox(width: 12),
               Expanded(
