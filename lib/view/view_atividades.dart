@@ -3,6 +3,7 @@ import 'package:fatechub2/widgets/app_bar.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:fatechub2/view/view_criar_atividade.dart';
+import 'view_atividadeEntregar.dart';
 
 class TelaAtividades extends StatefulWidget {
   final String nomeUsuario;
@@ -302,12 +303,20 @@ class _TelaAtividadesState extends State<TelaAtividades> {
 
       child: InkWell(
         onTap: () {
-          _mostrarDetalhes(
-            id: id,
-            nome: nome,
-            dataEntrega: dataEntrega,
-            entregue: entregue,
-            descricao: descricao,
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (_) => TelaAtividade(
+                nomeUsuario: widget.nomeUsuario,
+                nomeTurma: widget.nomeTurma,
+                atividadeId: id,
+                nome: nome,
+                dataEntrega: dataEntrega,
+                descricao: descricao,
+                disciplina: widget.disciplina,
+                isProfessor: _perfil == 'professor',
+              ),
+            ),
           );
         },
 
@@ -441,117 +450,6 @@ class _TelaAtividadesState extends State<TelaAtividades> {
           ),
         ),
       ],
-    );
-  }
-
-  void _mostrarDetalhes({
-    required String id,
-    required String nome,
-    required String dataEntrega,
-    required bool entregue,
-    required String descricao,
-  }) {
-    showModalBottomSheet(
-      context: context,
-      backgroundColor:
-          Theme.of(context).colorScheme.surface,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(
-          top: Radius.circular(14),
-        ),
-      ),
-
-      builder: (context) {
-        return Padding(
-          padding: const EdgeInsets.fromLTRB(
-            18,
-            18,
-            18,
-            25,
-          ),
-
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment:
-                CrossAxisAlignment.start,
-
-            children: [
-              Text(
-                nome,
-                style: const TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.w700,
-                ),
-              ),
-
-              const SizedBox(height: 12),
-
-              Row(
-                children: [
-                  const Icon(
-                    Icons.calendar_today_outlined,
-                    size: 16,
-                  ),
-
-                  const SizedBox(width: 6),
-
-                  Text(
-                    'Data de entrega: $dataEntrega',
-                    style: const TextStyle(
-                      fontSize: 12,
-                    ),
-                  ),
-                ],
-              ),
-
-              const SizedBox(height: 12),
-
-              Text(
-                descricao.isEmpty
-                    ? 'Nenhuma descrição informada.'
-                    : descricao,
-                style: const TextStyle(
-                  fontSize: 12,
-                ),
-              ),
-
-              if (_perfil != 'professor') ...[
-                const SizedBox(height: 16),
-
-                Row(
-                  children: [
-                    Icon(
-                      entregue
-                          ? Icons.check_circle
-                          : Icons.radio_button_unchecked,
-                      size: 18,
-                      color: entregue
-                          ? Colors.green
-                          : Colors.grey,
-                    ),
-
-                    const SizedBox(width: 6),
-
-                    Text(
-                      entregue
-                          ? 'Atividade entregue'
-                          : 'Atividade não entregue',
-                      style: TextStyle(
-                        fontSize: 11,
-                        fontWeight:
-                            FontWeight.w600,
-                        color: entregue
-                            ? Colors.green
-                            : Colors.grey,
-                      ),
-                    ),
-                  ],
-                ),
-              ],
-            ],
-          ),
-        );
-      },
     );
   }
 
