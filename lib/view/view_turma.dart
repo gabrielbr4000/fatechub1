@@ -71,7 +71,6 @@ class _TelaTurmasState extends State<TelaTurmas>
     'PI ADS II': 'PI-ADS-II',
     'Banco de Dados I': 'BD-I',
     'Desenvolvimento Web': 'DES-WEB',
-
     'ENG SOFT I': 'ENG-SOFT-I',
     'SO': 'SO',
     'COM EXP': 'COM-EXP',
@@ -106,7 +105,6 @@ class _TelaTurmasState extends State<TelaTurmas>
     'PI ADS II': 'PI ADS II',
     'Banco de Dados I': 'Banco de Dados I',
     'Desenvolvimento Web': 'Desenvolvimento Web',
-
     'ENG SOFT I': 'Engenharia de Software I',
     'SO': 'Sistemas Operacionais',
     'COM EXP': 'Comunicação e Expressão',
@@ -127,6 +125,8 @@ class _TelaTurmasState extends State<TelaTurmas>
     _carregarDadosUsuario();
   }
 
+  // ─── Carrega dados do usuário ─────────────────────────────────────────────
+
   Future<void> _carregarDadosUsuario() async {
     try {
       final usuario = FirebaseAuth.instance.currentUser;
@@ -146,11 +146,16 @@ class _TelaTurmasState extends State<TelaTurmas>
 
         setState(() {
           _perfil = dados?['perfil'] as String?;
-          _semestreAluno = dados?['semestre'] as int?;
+
+          _semestreAluno =
+              dados?['semestre'] as int?;
+
           _turnoAluno =
               (dados?['turno'] as String?)?.trim();
+
           _disciplinaProfessor =
               (dados?['disciplina'] as String?)?.trim();
+
           _carregando = false;
         });
       } else {
@@ -167,12 +172,18 @@ class _TelaTurmasState extends State<TelaTurmas>
     if (_disciplinaProfessor == null) return [];
 
     final codigo =
-        _codigoTurma[_disciplinaProfessor] ??
+        _codigoTurma[_disciplinaProfessor!] ??
             _disciplinaProfessor!;
 
     return [
-      {'nome': '$codigo-MANHA', 'ativo': true},
-      {'nome': '$codigo-NOITE', 'ativo': true},
+      {
+        'nome': '$codigo-MANHA',
+        'ativo': true,
+      },
+      {
+        'nome': '$codigo-NOITE',
+        'ativo': true,
+      },
     ];
   }
 
@@ -182,8 +193,10 @@ class _TelaTurmasState extends State<TelaTurmas>
     switch (_semestreAluno) {
       case 1:
         return _disciplinasPrimeiroSemestre;
+
       case 2:
         return _disciplinasSegundoSemestre;
+
       default:
         return [];
     }
@@ -192,10 +205,9 @@ class _TelaTurmasState extends State<TelaTurmas>
   // ─── Lista filtrada ───────────────────────────────────────────────────────
 
   List<Map<String, dynamic>> get _listaFiltrada {
-    final lista =
-        _perfil == 'professor'
-            ? _turmasProfessor
-            : _disciplinas;
+    final lista = _perfil == 'professor'
+        ? _turmasProfessor
+        : _disciplinas;
 
     return lista.where((d) {
       final passaFiltro = switch (_filtro) {
@@ -204,7 +216,8 @@ class _TelaTurmasState extends State<TelaTurmas>
         _ => true,
       };
 
-      final passaBusca = _busca.isEmpty ||
+      final passaBusca =
+          _busca.isEmpty ||
           (d['nome'] as String)
               .toLowerCase()
               .contains(_busca.toLowerCase());
@@ -213,6 +226,8 @@ class _TelaTurmasState extends State<TelaTurmas>
     }).toList();
   }
 
+  // ─── Título do cabeçalho ──────────────────────────────────────────────────
+
   String get _tituloCabecalho {
     if (_perfil == 'professor') {
       return _nomeCompleto[_disciplinaProfessor?.trim()] ??
@@ -220,67 +235,85 @@ class _TelaTurmasState extends State<TelaTurmas>
           '';
     }
 
-    return 'Análise e Desenvolvimento de Sistemas - ${_semestreAluno}º Semestre';
+    return 'Análise e Desenvolvimento de Sistemas - '
+        '${_semestreAluno}º Semestre';
   }
 
-  // ─── Botão de atividades do aluno ────────────────────────────────────────
+  // ─── Botão de atividades do aluno ─────────────────────────────────────────
 
+  Widget _buildBotaoAtividades() {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(16, 4, 16, 16),
+      child: SizedBox(
+        width: double.infinity,
+        height: 44,
+        child: ElevatedButton(
+          onPressed: () {
+            if (_semestreAluno == null ||
+                _turnoAluno == null ||
+                _turnoAluno!.isEmpty) {
+              return;
+            }
 
-Widget _buildBotaoAtividades() {
-  return Padding(
-    padding: const EdgeInsets.fromLTRB(16, 4, 16, 16),
-    child: SizedBox(
-      width: double.infinity,
-      height: 44,
-      child: ElevatedButton(
-        onPressed: () {
-          if (_semestreAluno == null ||
-              _turnoAluno == null ||
-              _turnoAluno!.isEmpty) {
-            return;
-          }
-
-          Navigator.of(context).push(
-            MaterialPageRoute(
-              builder: (_) => TelaTodasAtividadesAluno(
-                nomeUsuario: widget.nomeUsuario,
-                semestre: _semestreAluno!,
-                turno: _turnoAluno!,
+            Navigator.of(context).push(
+              MaterialPageRoute(
+                builder: (_) => TelaTodasAtividadesAluno(
+                  nomeUsuario: widget.nomeUsuario,
+                  semestre: _semestreAluno!,
+                  turno: _turnoAluno!,
+                ),
               ),
+            );
+          },
+          style: ElevatedButton.styleFrom(
+            backgroundColor: const Color(0xFF8B0000),
+            foregroundColor: Colors.white,
+            elevation: 1,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(6),
             ),
-          );
-        },
-        style: ElevatedButton.styleFrom(
-          backgroundColor: const Color(0xFF8B0000),
-          foregroundColor: Colors.white,
-          elevation: 1,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(6),
+          ),
+          child: Row(
+            mainAxisAlignment:
+                MainAxisAlignment.center,
+            children: const [
+              Icon(
+                Icons.assignment_outlined,
+                size: 18,
+              ),
+              SizedBox(width: 7),
+              Text(
+                'Atividades',
+                style: TextStyle(
+                  fontSize: 13,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ],
           ),
         ),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: const [
-            Icon(
-              Icons.assignment_outlined,
-              size: 18,
-            ),
-            SizedBox(width: 7),
-            Text(
-              'Atividades',
-              style: TextStyle(
-                fontSize: 13,
-                fontWeight: FontWeight.w600,
-              ),
-            ),
-          ],
+      ),
+    );
+  }
+
+  // ─── Mensagem para coordenador ────────────────────────────────────────────
+
+  Widget _buildSemTurmas() {
+    return const Center(
+      child: Padding(
+        padding: EdgeInsets.all(24),
+        child: Text(
+          'Você não está cadastrado em nenhuma turma.',
+          textAlign: TextAlign.center,
+          style: TextStyle(
+            fontSize: 15,
+          ),
         ),
       ),
-    ),
-  );
-}
+    );
+  }
 
-
+  // ─── Dispose ──────────────────────────────────────────────────────────────
 
   @override
   void dispose() {
@@ -291,61 +324,81 @@ Widget _buildBotaoAtividades() {
   @override
   bool get wantKeepAlive => true;
 
+  // ─── Build ────────────────────────────────────────────────────────────────
+
   @override
   Widget build(BuildContext context) {
     super.build(context);
 
     return Scaffold(
       backgroundColor:
-          Theme.of(context).colorScheme.surfaceContainerLow,
+          Theme.of(context)
+              .colorScheme
+              .surfaceContainerLow,
+
       appBar: AppBarPadrao(
         nomeUsuario: widget.nomeUsuario,
       ),
+
       body: _carregando
           ? const Center(
               child: CircularProgressIndicator(),
             )
-          : _perfil == 'professor'
-              ? _disciplinaProfessor == null
-                  ? _buildErro(
-                      'Disciplina não encontrada.',
-                    )
-                  : Column(
-                      crossAxisAlignment:
-                          CrossAxisAlignment.start,
-                      children: [
-                        _buildCabecalho(
-                          _tituloCabecalho,
-                        ),
-                        _buildBarraFiltros(),
-                        Expanded(
-                          child: _buildGrid(),
-                        ),
-                      ],
-                    )
-              : _semestreAluno == null
-                  ? _buildErro(
-                      'Não foi possível identificar o semestre.',
-                    )
-                  : Column(
-                      crossAxisAlignment:
-                          CrossAxisAlignment.start,
-                      children: [
-                        _buildCabecalho(
-                          _tituloCabecalho,
-                        ),
-                        _buildBarraFiltros(),
 
-                        // Só aparece para alunos.
-                        _buildBotaoAtividades(),
+          // ─── COORDENADOR ───────────────────────────────────────────────
+          : _perfil == 'coordenador'
+              ? _buildSemTurmas()
 
-                        Expanded(
-                          child: _buildGrid(),
+          // ─── PROFESSOR ────────────────────────────────────────────────
+              : _perfil == 'professor'
+                  ? _disciplinaProfessor == null
+                      ? _buildErro(
+                          'Disciplina não encontrada.',
+                        )
+                      : Column(
+                          crossAxisAlignment:
+                              CrossAxisAlignment.start,
+                          children: [
+                            _buildCabecalho(
+                              _tituloCabecalho,
+                            ),
+
+                            _buildBarraFiltros(),
+
+                            Expanded(
+                              child: _buildGrid(),
+                            ),
+                          ],
+                        )
+
+          // ─── ALUNO ────────────────────────────────────────────────────
+                  : _semestreAluno == null
+                      ? _buildErro(
+                          'Não foi possível identificar '
+                          'o semestre.',
+                        )
+                      : Column(
+                          crossAxisAlignment:
+                              CrossAxisAlignment.start,
+                          children: [
+                            _buildCabecalho(
+                              _tituloCabecalho,
+                            ),
+
+                            _buildBarraFiltros(),
+
+                            // Só aparece para alunos.
+                            _buildBotaoAtividades(),
+
+                            Expanded(
+                              child: _buildGrid(),
+                            ),
+                          ],
                         ),
-                      ],
-                    ),
     );
   }
+
+  // ─── Mensagem de erro ─────────────────────────────────────────────────────
 
   Widget _buildErro(String mensagem) {
     return Center(
@@ -355,8 +408,9 @@ Widget _buildBotaoAtividades() {
           mensagem,
           textAlign: TextAlign.center,
           style: TextStyle(
-            color:
-                Theme.of(context).colorScheme.onSurface,
+            color: Theme.of(context)
+                .colorScheme
+                .onSurface,
             fontSize: 15,
           ),
         ),
@@ -364,10 +418,14 @@ Widget _buildBotaoAtividades() {
     );
   }
 
+  // ─── Cabeçalho ────────────────────────────────────────────────────────────
+
   Widget _buildCabecalho(String texto) {
     return Container(
       width: double.infinity,
-      color: Theme.of(context).colorScheme.surface,
+      color: Theme.of(context)
+          .colorScheme
+          .surface,
       padding: const EdgeInsets.symmetric(
         horizontal: 16,
         vertical: 14,
@@ -378,16 +436,21 @@ Widget _buildBotaoAtividades() {
         style: TextStyle(
           fontSize: 15,
           fontWeight: FontWeight.w600,
-          color:
-              Theme.of(context).colorScheme.onSurface,
+          color: Theme.of(context)
+              .colorScheme
+              .onSurface,
         ),
       ),
     );
   }
 
+  // ─── Barra de filtros ─────────────────────────────────────────────────────
+
   Widget _buildBarraFiltros() {
     return Container(
-      color: Theme.of(context).colorScheme.surface,
+      color: Theme.of(context)
+          .colorScheme
+          .surface,
       padding: const EdgeInsets.fromLTRB(
         12,
         0,
@@ -407,12 +470,14 @@ Widget _buildBotaoAtividades() {
                     .colorScheme
                     .onSurface,
               ),
-              borderRadius: BorderRadius.circular(6),
+              borderRadius:
+                  BorderRadius.circular(6),
               color: Theme.of(context)
                   .colorScheme
                   .surface,
             ),
-            child: DropdownButtonHideUnderline(
+            child:
+                DropdownButtonHideUnderline(
               child: DropdownButton<String>(
                 value: _filtro,
                 icon: const Icon(
@@ -445,7 +510,9 @@ Widget _buildBotaoAtividades() {
               ),
             ),
           ),
+
           const SizedBox(width: 8),
+
           Expanded(
             child: SizedBox(
               height: 38,
@@ -480,7 +547,8 @@ Widget _buildBotaoAtividades() {
                           .onSurfaceVariant,
                     ),
                   ),
-                  enabledBorder: OutlineInputBorder(
+                  enabledBorder:
+                      OutlineInputBorder(
                     borderRadius:
                         BorderRadius.circular(6),
                     borderSide: BorderSide(
@@ -491,7 +559,8 @@ Widget _buildBotaoAtividades() {
                   ),
                   focusedBorder:
                       const OutlineInputBorder(
-                    borderRadius: BorderRadius.all(
+                    borderRadius:
+                        BorderRadius.all(
                       Radius.circular(6),
                     ),
                     borderSide: BorderSide(
@@ -503,7 +572,9 @@ Widget _buildBotaoAtividades() {
               ),
             ),
           ),
+
           const SizedBox(width: 8),
+
           Container(
             height: 38,
             padding: const EdgeInsets.symmetric(
@@ -515,7 +586,8 @@ Widget _buildBotaoAtividades() {
                     .colorScheme
                     .onSurfaceVariant,
               ),
-              borderRadius: BorderRadius.circular(6),
+              borderRadius:
+                  BorderRadius.circular(6),
               color: Theme.of(context)
                   .colorScheme
                   .surface,
@@ -537,6 +609,8 @@ Widget _buildBotaoAtividades() {
     );
   }
 
+  // ─── Grid ─────────────────────────────────────────────────────────────────
+
   Widget _buildGrid() {
     final lista = _listaFiltrada;
 
@@ -547,8 +621,9 @@ Widget _buildBotaoAtividades() {
               ? 'Nenhuma turma encontrada.'
               : 'Nenhuma disciplina encontrada.',
           style: TextStyle(
-            color:
-                Theme.of(context).colorScheme.onSurface,
+            color: Theme.of(context)
+                .colorScheme
+                .onSurface,
           ),
         ),
       );
@@ -569,6 +644,8 @@ Widget _buildBotaoAtividades() {
     );
   }
 
+  // ─── Card ─────────────────────────────────────────────────────────────────
+
   Widget _buildCard(
     Map<String, dynamic> item,
   ) {
@@ -583,7 +660,8 @@ Widget _buildBotaoAtividades() {
             nomeItem;
 
     final String codigoBase =
-        _codigoTurma[nomeItem] ?? nomeItem;
+        _codigoTurma[nomeItem] ??
+            nomeItem;
 
     final String codigoTurma =
         _perfil == 'professor'
@@ -597,24 +675,31 @@ Widget _buildBotaoAtividades() {
       onTap: () {
         Navigator.of(context).push(
           MaterialPageRoute(
-            builder: (_) => TelaDetalhesTurma(
-              nomeUsuario: widget.nomeUsuario,
+            builder: (_) =>
+                TelaDetalhesTurma(
+              nomeUsuario:
+                  widget.nomeUsuario,
               nomeTurma: codigoTurma,
-              disciplina: nomeDisciplina,
+              disciplina:
+                  nomeDisciplina,
             ),
           ),
         );
       },
       child: Container(
         decoration: BoxDecoration(
-          color:
-              Theme.of(context).colorScheme.surface,
-          borderRadius: BorderRadius.circular(8),
+          color: Theme.of(context)
+              .colorScheme
+              .surface,
+          borderRadius:
+              BorderRadius.circular(8),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.06),
+              color:
+                  Colors.black.withOpacity(0.06),
               blurRadius: 4,
-              offset: const Offset(0, 2),
+              offset:
+                  const Offset(0, 2),
             ),
           ],
         ),
@@ -624,7 +709,8 @@ Widget _buildBotaoAtividades() {
           children: [
             Expanded(
               child: Container(
-                decoration: const BoxDecoration(
+                decoration:
+                    const BoxDecoration(
                   color: Color(0xFFEEEEEE),
                   borderRadius:
                       BorderRadius.vertical(
@@ -640,8 +726,10 @@ Widget _buildBotaoAtividades() {
                 ),
               ),
             ),
+
             Padding(
-              padding: const EdgeInsets.symmetric(
+              padding:
+                  const EdgeInsets.symmetric(
                 horizontal: 10,
                 vertical: 8,
               ),
@@ -652,7 +740,8 @@ Widget _buildBotaoAtividades() {
                     TextOverflow.ellipsis,
                 style: TextStyle(
                   fontSize: 12,
-                  fontWeight: FontWeight.w500,
+                  fontWeight:
+                      FontWeight.w500,
                   color: Theme.of(context)
                       .colorScheme
                       .onSurface,
@@ -665,4 +754,3 @@ Widget _buildBotaoAtividades() {
     );
   }
 }
-

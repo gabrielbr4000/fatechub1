@@ -1,5 +1,12 @@
+import 'dart:typed_data';
+
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:fatechub2/widgets/app_bar.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_storage/firebase_storage.dart';
+import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 class TelaHome extends StatelessWidget {
   final String nomeUsuario;
@@ -44,9 +51,19 @@ class _MuralCardState extends State<_MuralCard> {
   int _paginaAtual = 0;
 
   final List<_MuralSlide> _slides = const [
-    _MuralSlide(icone: Icons.campaign_outlined, texto: 'Bem-vindo ao Mural de Novidades!'),
-    _MuralSlide(icone: Icons.flight_outlined, texto: 'Intercâmbio internacional de 1 semestre acadêmico — Para alunos FATEC'),
-    _MuralSlide(icone: Icons.work_outline, texto: 'As inscrições para o programa de estágio já estão abertas!'),
+    _MuralSlide(
+      icone: Icons.campaign_outlined,
+      texto: 'Bem-vindo ao Mural de Novidades!',
+    ),
+    _MuralSlide(
+      icone: Icons.flight_outlined,
+      texto:
+          'Intercâmbio internacional de 1 semestre acadêmico — Para alunos FATEC',
+    ),
+    _MuralSlide(
+      icone: Icons.work_outline,
+      texto: 'As inscrições para o programa de estágio já estão abertas!',
+    ),
   ];
 
   @override
@@ -88,13 +105,20 @@ class _MuralCardState extends State<_MuralCard> {
               onPageChanged: (i) => setState(() => _paginaAtual = i),
               itemBuilder: (context, index) {
                 final slide = _slides[index];
+
                 return Container(
                   color: Theme.of(context).colorScheme.surface,
                   child: Center(
                     child: Column(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        Icon(slide.icone, size: 48, color: Theme.of(context).colorScheme.onSurfaceVariant),
+                        Icon(
+                          slide.icone,
+                          size: 48,
+                          color: Theme.of(context)
+                              .colorScheme
+                              .onSurfaceVariant,
+                        ),
                         const SizedBox(height: 8),
                         Padding(
                           padding: const EdgeInsets.symmetric(horizontal: 32),
@@ -102,7 +126,9 @@ class _MuralCardState extends State<_MuralCard> {
                             slide.texto,
                             textAlign: TextAlign.center,
                             style: TextStyle(
-                              color: Theme.of(context).colorScheme.onSurfaceVariant,
+                              color: Theme.of(context)
+                                  .colorScheme
+                                  .onSurfaceVariant,
                               fontSize: 14,
                             ),
                           ),
@@ -113,14 +139,18 @@ class _MuralCardState extends State<_MuralCard> {
                 );
               },
             ),
-
             Positioned(
-              top: 0, left: 0, right: 0,
+              top: 0,
+              left: 0,
+              right: 0,
               child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
                 decoration: const BoxDecoration(
                   color: Color(0xFF8B0000),
-                  borderRadius: BorderRadius.vertical(top: Radius.circular(12)),
+                  borderRadius: BorderRadius.vertical(
+                    top: Radius.circular(12),
+                  ),
                 ),
                 child: const Text(
                   'Mural de Novidades',
@@ -133,56 +163,72 @@ class _MuralCardState extends State<_MuralCard> {
                 ),
               ),
             ),
-
             if (_paginaAtual > 0)
               Positioned(
-                left: 4, top: 0, bottom: 0,
+                left: 4,
+                top: 0,
+                bottom: 0,
                 child: Center(
                   child: GestureDetector(
                     onTap: () => _irPara(_paginaAtual - 1),
                     child: Container(
-                      width: 28, height: 28,
+                      width: 28,
+                      height: 28,
                       decoration: BoxDecoration(
                         color: Colors.black.withOpacity(0.25),
                         shape: BoxShape.circle,
                       ),
-                      child: const Icon(Icons.chevron_left, color: Colors.white, size: 20),
+                      child: const Icon(
+                        Icons.chevron_left,
+                        color: Colors.white,
+                        size: 20,
+                      ),
                     ),
                   ),
                 ),
               ),
-
             if (_paginaAtual < _slides.length - 1)
               Positioned(
-                right: 4, top: 0, bottom: 0,
+                right: 4,
+                top: 0,
+                bottom: 0,
                 child: Center(
                   child: GestureDetector(
                     onTap: () => _irPara(_paginaAtual + 1),
                     child: Container(
-                      width: 28, height: 28,
+                      width: 28,
+                      height: 28,
                       decoration: BoxDecoration(
                         color: Colors.black.withOpacity(0.25),
                         shape: BoxShape.circle,
                       ),
-                      child: const Icon(Icons.chevron_right, color: Colors.white, size: 20),
+                      child: const Icon(
+                        Icons.chevron_right,
+                        color: Colors.white,
+                        size: 20,
+                      ),
                     ),
                   ),
                 ),
               ),
-
             Positioned(
-              bottom: 10, left: 0, right: 0,
+              bottom: 10,
+              left: 0,
+              right: 0,
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: List.generate(_slides.length, (index) {
                   final bool ativo = index == _paginaAtual;
+
                   return AnimatedContainer(
                     duration: const Duration(milliseconds: 250),
                     margin: const EdgeInsets.symmetric(horizontal: 4),
                     width: ativo ? 18 : 7,
                     height: 7,
                     decoration: BoxDecoration(
-                      color: ativo ? const Color(0xFF8B0000) : Colors.grey.shade400,
+                      color: ativo
+                          ? const Color(0xFF8B0000)
+                          : Colors.grey.shade400,
                       borderRadius: BorderRadius.circular(4),
                     ),
                   );
@@ -199,7 +245,11 @@ class _MuralCardState extends State<_MuralCard> {
 class _MuralSlide {
   final IconData icone;
   final String texto;
-  const _MuralSlide({required this.icone, required this.texto});
+
+  const _MuralSlide({
+    required this.icone,
+    required this.texto,
+  });
 }
 
 // ─── Seção de Notícias / Avisos ───────────────────────────────────────────────
@@ -208,7 +258,8 @@ class _SecaoNoticias extends StatelessWidget {
   final List<_AvisoItem> avisos = const [
     _AvisoItem(
       titulo: 'Palestra: Mercado de TI',
-      descricao: 'Palestra sobre carreira e tendências no mercado de tecnologia.',
+      descricao:
+          'Palestra sobre carreira e tendências no mercado de tecnologia.',
       data: 'Hoje',
       icone: Icons.mic_outlined,
     ),
@@ -293,7 +344,11 @@ class _CardAviso extends StatelessWidget {
               color: const Color(0xFF8B0000).withOpacity(0.1),
               borderRadius: BorderRadius.circular(10),
             ),
-            child: Icon(aviso.icone, color: const Color(0xFF8B0000), size: 22),
+            child: Icon(
+              aviso.icone,
+              color: const Color(0xFF8B0000),
+              size: 22,
+            ),
           ),
           const SizedBox(width: 12),
           Expanded(
@@ -311,7 +366,10 @@ class _CardAviso extends StatelessWidget {
                 const SizedBox(height: 2),
                 Text(
                   aviso.descricao,
-                  style: TextStyle(fontSize: 12, color: Theme.of(context).colorScheme.onSurfaceVariant),
+                  style: TextStyle(
+                    fontSize: 12,
+                    color: Theme.of(context).colorScheme.onSurfaceVariant,
+                  ),
                   maxLines: 2,
                   overflow: TextOverflow.ellipsis,
                 ),
@@ -321,10 +379,17 @@ class _CardAviso extends StatelessWidget {
           const SizedBox(width: 8),
           Text(
             aviso.data,
-            style: TextStyle(fontSize: 11, color: Theme.of(context).colorScheme.onSurfaceVariant),
+            style: TextStyle(
+              fontSize: 11,
+              color: Theme.of(context).colorScheme.onSurfaceVariant,
+            ),
           ),
           const SizedBox(width: 4),
-          Icon(Icons.chevron_right, color: Theme.of(context).colorScheme.onSurface, size: 18),
+          Icon(
+            Icons.chevron_right,
+            color: Theme.of(context).colorScheme.onSurface,
+            size: 18,
+          ),
         ],
       ),
     );
@@ -333,17 +398,251 @@ class _CardAviso extends StatelessWidget {
 
 // ─── Seção Acesso Rápido ──────────────────────────────────────────────────────
 
-class _SecaoAcessoRapido extends StatelessWidget {
+class _SecaoAcessoRapido extends StatefulWidget {
+  const _SecaoAcessoRapido();
+
+  @override
+  State<_SecaoAcessoRapido> createState() => _SecaoAcessoRapidoState();
+}
+
+class _SecaoAcessoRapidoState extends State<_SecaoAcessoRapido> {
   static const List<_AcessoItem> _itens = [
-    _AcessoItem(icone: Icons.calendar_month_outlined,    label: 'Calendário'),
-    _AcessoItem(icone: Icons.schedule_outlined,          label: 'Horários'),
-    _AcessoItem(icone: Icons.language_outlined,          label: 'Site'),
-    _AcessoItem(icone: Icons.school_outlined,            label: 'SIGA'),
-    _AcessoItem(icone: Icons.local_library_outlined,     label: 'Biblioteca'),
-    _AcessoItem(icone: Icons.work_outline,               label: 'Estágio'),
-    _AcessoItem(icone: Icons.record_voice_over_outlined, label: 'Ouvidoria'),
-    _AcessoItem(icone: Icons.email_outlined,             label: 'E-mail'),
+    _AcessoItem(
+      icone: Icons.calendar_month_outlined,
+      label: 'Calendário',
+    ),
+    _AcessoItem(
+      icone: Icons.schedule_outlined,
+      label: 'Horários',
+    ),
+    _AcessoItem(
+      icone: Icons.language_outlined,
+      label: 'Site',
+    ),
+    _AcessoItem(
+      icone: Icons.school_outlined,
+      label: 'SIGA',
+    ),
+    _AcessoItem(
+      icone: Icons.local_library_outlined,
+      label: 'Biblioteca',
+    ),
+    _AcessoItem(
+      icone: Icons.work_outline,
+      label: 'Estágio',
+    ),
+    _AcessoItem(
+      icone: Icons.record_voice_over_outlined,
+      label: 'Ouvidoria',
+    ),
+    _AcessoItem(
+      icone: Icons.email_outlined,
+      label: 'E-mail',
+    ),
   ];
+
+  String? _perfil;
+  String? _urlCalendario;
+
+  @override
+  void initState() {
+    super.initState();
+    _carregarDados();
+  }
+
+  Future<void> _carregarDados() async {
+    final usuario = FirebaseAuth.instance.currentUser;
+
+    if (usuario == null) return;
+
+    try {
+      final usuarioDoc = await FirebaseFirestore.instance
+          .collection('usuarios')
+          .doc(usuario.uid)
+          .get();
+
+      final calendarioDoc = await FirebaseFirestore.instance
+          .collection('configuracoes')
+          .doc('calendario')
+          .get();
+
+      if (!mounted) return;
+
+      setState(() {
+        _perfil = usuarioDoc.data()?['perfil'];
+        _urlCalendario = calendarioDoc.data()?['url'];
+      });
+    } catch (_) {}
+  }
+
+  Future<void> _adicionarCalendario() async {
+    if (_perfil != 'coordenador') return;
+
+    try {
+      final resultado = await FilePicker.platform.pickFiles(
+        type: FileType.custom,
+        allowedExtensions: ['pdf'],
+        withData: true,
+      );
+
+      if (resultado == null || resultado.files.isEmpty) return;
+
+      final arquivo = resultado.files.first;
+      final Uint8List? bytes = arquivo.bytes;
+
+      if (bytes == null) {
+        if (!mounted) return;
+
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Não foi possível ler o arquivo.'),
+          ),
+        );
+
+        return;
+      }
+
+      final referencia = FirebaseStorage.instance
+          .ref()
+          .child('calendario')
+          .child('calendario_letivo.pdf');
+
+      await referencia.putData(
+        bytes,
+        SettableMetadata(
+          contentType: 'application/pdf',
+        ),
+      );
+
+      final url = await referencia.getDownloadURL();
+
+      await FirebaseFirestore.instance
+          .collection('configuracoes')
+          .doc('calendario')
+          .set({
+        'url': url,
+        'nomeArquivo': arquivo.name,
+        'atualizadoEm': FieldValue.serverTimestamp(),
+      });
+
+      if (!mounted) return;
+
+      setState(() {
+        _urlCalendario = url;
+      });
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Calendário enviado com sucesso.'),
+        ),
+      );
+    } catch (e) {
+      if (!mounted) return;
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Erro ao enviar o calendário: $e'),
+        ),
+      );
+    }
+  }
+
+  Future<void> _apagarCalendario() async {
+    if (_perfil != 'coordenador') return;
+
+    try {
+      final referencia = FirebaseStorage.instance
+          .ref()
+          .child('calendario')
+          .child('calendario_letivo.pdf');
+
+      try {
+        await referencia.delete();
+      } catch (_) {}
+
+      await FirebaseFirestore.instance
+          .collection('configuracoes')
+          .doc('calendario')
+          .delete();
+
+      if (!mounted) return;
+
+      setState(() {
+        _urlCalendario = null;
+      });
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Calendário apagado com sucesso.'),
+        ),
+      );
+    } catch (e) {
+      if (!mounted) return;
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Erro ao apagar o calendário: $e'),
+        ),
+      );
+    }
+  }
+
+  Future<void> _menuCalendario() async {
+    if (_perfil != 'coordenador') return;
+
+    final opcao = await showModalBottomSheet<String>(
+      context: context,
+      builder: (context) {
+        return SafeArea(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              ListTile(
+                leading: const Icon(Icons.upload_file),
+                title: const Text('Adicionar PDF'),
+                onTap: () {
+                  Navigator.pop(context, 'adicionar');
+                },
+              ),
+              if (_urlCalendario != null &&
+                  _urlCalendario!.isNotEmpty)
+                ListTile(
+                  leading: const Icon(Icons.delete_outline),
+                  title: const Text('Apagar PDF atual'),
+                  onTap: () {
+                    Navigator.pop(context, 'apagar');
+                  },
+                ),
+            ],
+          ),
+        );
+      },
+    );
+
+    if (opcao == 'adicionar') {
+      await _adicionarCalendario();
+    } else if (opcao == 'apagar') {
+      await _apagarCalendario();
+    }
+  }
+
+  Future<void> _abrirCalendario() async {
+    if (_urlCalendario == null || _urlCalendario!.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text(
+            'O calendário ainda não foi disponibilizado.',
+          ),
+        ),
+      );
+      return;
+    }
+
+    await launchUrl(
+      Uri.parse(_urlCalendario!),
+      mode: LaunchMode.externalApplication,
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -369,7 +668,18 @@ class _SecaoAcessoRapido extends StatelessWidget {
           mainAxisSpacing: 12,
           crossAxisSpacing: 12,
           childAspectRatio: 2.2,
-          children: _itens.map((item) => _CardAcesso(item: item)).toList(),
+          children: _itens.map((item) {
+            if (item.label == 'Calendário') {
+              return _CardAcesso(
+                item: item,
+                onTap: _abrirCalendario,
+                mostrarMais: _perfil == 'coordenador',
+                onMaisTap: _menuCalendario,
+              );
+            }
+
+            return _CardAcesso(item: item);
+          }).toList(),
         ),
       ],
     );
@@ -379,59 +689,102 @@ class _SecaoAcessoRapido extends StatelessWidget {
 class _AcessoItem {
   final IconData icone;
   final String label;
-  const _AcessoItem({required this.icone, required this.label});
+
+  const _AcessoItem({
+    required this.icone,
+    required this.label,
+  });
 }
 
 class _CardAcesso extends StatelessWidget {
   final _AcessoItem item;
+  final VoidCallback? onTap;
+  final bool mostrarMais;
+  final VoidCallback? onMaisTap;
 
-  const _CardAcesso({required this.item});
+  const _CardAcesso({
+    required this.item,
+    this.onTap,
+    this.mostrarMais = false,
+    this.onMaisTap,
+  });
 
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
-      onTap: () {},
-      child: Container(
-        decoration: BoxDecoration(
-          color: Theme.of(context).colorScheme.surface,
-          borderRadius: BorderRadius.circular(12),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withOpacity(0.06),
-              blurRadius: 6,
-              offset: const Offset(0, 2),
-            ),
-          ],
-        ),
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 12),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.start,
-            children: [
-              Container(
-                width: 42,
-                height: 42,
-                decoration: BoxDecoration(
-                  color: const Color(0xFF8B0000).withOpacity(0.1),
-                  borderRadius: BorderRadius.circular(10),
+      onTap: onTap ?? () {},
+      child: Stack(
+        fit: StackFit.passthrough,
+        children: [
+          Container(
+            decoration: BoxDecoration(
+              color: Theme.of(context).colorScheme.surface,
+              borderRadius: BorderRadius.circular(12),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.06),
+                  blurRadius: 6,
+                  offset: const Offset(0, 2),
                 ),
-                child: Icon(item.icone, color: const Color(0xFF8B0000), size: 24),
+              ],
+            ),
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 12),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.start,
+                children: [
+                  Container(
+                    width: 42,
+                    height: 42,
+                    decoration: BoxDecoration(
+                      color: const Color(0xFF8B0000).withOpacity(0.1),
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    child: Icon(
+                      item.icone,
+                      color: const Color(0xFF8B0000),
+                      size: 24,
+                    ),
+                  ),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: Text(
+                      item.label,
+                      style: TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w600,
+                        color: Theme.of(context).colorScheme.onSurface,
+                        height: 1.4,
+                      ),
+                    ),
+                  ),
+                ],
               ),
-              const SizedBox(width: 10),
-              Expanded(
-                child: Text(
-                  item.label,
-                  style: TextStyle(
-                    fontSize: 12,
-                    fontWeight: FontWeight.w600,
-                    color: Theme.of(context).colorScheme.onSurface,
-                    height: 1.4,
+            ),
+          ),
+          if (mostrarMais)
+            Positioned(
+              right: 8,
+              top: 8,
+              child: GestureDetector(
+                behavior: HitTestBehavior.opaque,
+                onTap: onMaisTap,
+                child: Container(
+                  width: 22,
+                  height: 22,
+                  decoration: const BoxDecoration(
+                    color: Color(0xFF8B0000),
+                    shape: BoxShape.circle,
+                  ),
+                  child: const Icon(
+                    Icons.add,
+                    color: Colors.white,
+                    size: 16,
                   ),
                 ),
               ),
-            ],
-          ),
-        ),
+            ),
+        ],
       ),
     );
   }
