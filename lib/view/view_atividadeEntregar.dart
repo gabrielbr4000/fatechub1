@@ -1,7 +1,12 @@
+import 'dart:typed_data';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:fatechub2/widgets/app_bar.dart';
+import 'package:file_picker/file_picker.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_storage/firebase_storage.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 class TelaAtividade extends StatefulWidget {
   final String nomeUsuario;
@@ -12,6 +17,7 @@ class TelaAtividade extends StatefulWidget {
   final String descricao;
   final String? disciplina;
   final bool isProfessor;
+  final List<Map<String, dynamic>> anexosProfessor;
 
   const TelaAtividade({
     super.key,
@@ -23,6 +29,7 @@ class TelaAtividade extends StatefulWidget {
     required this.descricao,
     this.disciplina,
     required this.isProfessor,
+    this.anexosProfessor = const [],
   });
 
   @override
@@ -33,14 +40,20 @@ class _TelaAtividadeState extends State<TelaAtividade> {
   final TextEditingController _linkController = TextEditingController();
   final String _uidAtual = FirebaseAuth.instance.currentUser!.uid;
 
+  static const int _limiteBytes = 50 * 1024 * 1024; // 50 MB
+
   bool _enviando = false;
   Map<String, dynamic>? _entregaAtual;
   bool _carregandoEntrega = true;
 
+  // Arquivo selecionado pelo aluno
+  String? _nomeArquivo;
+  Uint8List? _bytesArquivo;
+
   @override
   void initState() {
     super.initState();
-    _carregarEntrega();
+    if (!widget.isProfessor) _carregarEntrega();
   }
 
   @override
@@ -62,67 +75,107 @@ class _TelaAtividadeState extends State<TelaAtividade> {
           .doc(_uidAtual)
           .get();
 
-      if (doc.exists) {
+      if (mounted) {
         setState(() {
-          _entregaAtual = doc.data();
+          _entregaAtual = doc.exists ? doc.data() : null;
           _carregandoEntrega = false;
         });
-      } else {
-        setState(() => _carregandoEntrega = false);
       }
     } catch (e) {
-      setState(() => _carregandoEntrega = false);
+      if (mounted) setState(() => _carregandoEntrega = false);
     }
   }
 
-  // ─── Enviar link ──────────────────────────────────────────────────────────
+  // ─── Selecionar arquivo do aluno ──────────────────────────────────────────
 
-  Future<void> _enviarLink() async {
-    final link = _linkController.text.trim();
+  Future<void> _selecionarArquivo() async {
+    final resultado = await FilePicker.platform.pickFiles(
+      type: FileType.custom,
+      allowedExtensions: ['pdf', 'doc', 'docx', 'png', 'jpg', 'jpeg', 'zip'],
+      withData: true,
+    );
 
-    // A validação que impedia o envio se o link estivesse vazio foi removida.
+    if (resultado == null || resultado.files.isEmpty) return;
+
+    final arquivo = resultado.files.first;
+
+    // Valida limite de 50 MB
+    if (arquivo.size > _limiteBytes) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Arquivo muito grande. O limite é 50 MB.'),
+          backgroundColor: Colors.red,
+        ),
+      );
+      return;
+    }
+
+    setState(() {
+      _nomeArquivo = arquivo.name;
+      _bytesArquivo = arquivo.bytes;
+      _linkController.clear(); // limpa o link se havia
+    });
+  }
+
+  void _removerArquivo() {
+    setState(() {
+      _nomeArquivo = null;
+      _bytesArquivo = null;
+    });
+  }
+
+  // ─── Enviar entrega ───────────────────────────────────────────────────────
+
+  Future<void> _enviarEntrega() async {
+    final temLink = _linkController.text.trim().isNotEmpty;
+    final temArquivo = _nomeArquivo != null && _bytesArquivo != null;
+
+    if (!temLink && !temArquivo) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+            content: Text('Anexe um arquivo ou informe um link.')),
+      );
+      return;
+    }
 
     setState(() => _enviando = true);
 
     try {
-      // Define um valor padrão caso o utilizador não tenha preenchido nada
-      final valorFinal = link.isEmpty ? 'Entregue sem anexo' : link;
-      final tipoFinal = link.isEmpty ? 'texto' : 'link';
+      if (temArquivo) {
+        // Upload do arquivo para o Storage
+        final ref = FirebaseStorage.instance
+            .ref()
+            .child('entregas')
+            .child(widget.nomeTurma)
+            .child(widget.atividadeId)
+            .child(_uidAtual)
+            .child(_nomeArquivo!);
 
-      await _salvarEntrega(tipo: tipoFinal, valor: valorFinal);
-      _linkController.clear();
+        await ref.putData(
+          _bytesArquivo!,
+          SettableMetadata(contentType: _contentType(_nomeArquivo!)),
+        );
+
+        final url = await ref.getDownloadURL();
+        await _salvarEntrega(tipo: 'arquivo', valor: url, nomeArquivo: _nomeArquivo);
+      } else {
+        await _salvarEntrega(tipo: 'link', valor: _linkController.text.trim());
+      }
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Erro ao enviar. Tente novamente.')),
+      );
     } finally {
       if (mounted) setState(() => _enviando = false);
     }
   }
 
-  // ─── Enviar arquivo (simulado) ────────────────────────────────────────────
-
-  Future<void> _enviarArquivo() async {
-    // TODO: integrar com file_picker + Firebase Storage
-    // Por enquanto mostra um dialog explicativo
-    showDialog(
-      context: context,
-      builder: (_) => AlertDialog(
-        title: const Text('Anexar arquivo'),
-        content: const Text(
-          'Para enviar um arquivo, integre o pacote file_picker com o Firebase Storage.\n\nPor enquanto, use o campo de link para compartilhar via Google Drive ou similar.',
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Entendi'),
-          ),
-        ],
-      ),
-    );
-  }
-
-  // ─── Salva entrega no Firestore ───────────────────────────────────────────
-
   Future<void> _salvarEntrega({
     required String tipo,
     required String valor,
+    String? nomeArquivo,
   }) async {
     await FirebaseFirestore.instance
         .collection('turmas')
@@ -132,13 +185,13 @@ class _TelaAtividadeState extends State<TelaAtividade> {
         .collection('entregas')
         .doc(_uidAtual)
         .set({
-          'uid': _uidAtual,
-          'tipo': tipo,
-          'valor': valor,
-          'entregueEm': FieldValue.serverTimestamp(),
-        });
+      'uid': _uidAtual,
+      'tipo': tipo,
+      'valor': valor,
+      'nomeArquivo': nomeArquivo,
+      'entregueEm': FieldValue.serverTimestamp(),
+    });
 
-    // Atualiza o campo 'entregue' na atividade
     await FirebaseFirestore.instance
         .collection('turmas')
         .doc(widget.nomeTurma)
@@ -155,6 +208,12 @@ class _TelaAtividadeState extends State<TelaAtividade> {
       ),
     );
 
+    _linkController.clear();
+    setState(() {
+      _nomeArquivo = null;
+      _bytesArquivo = null;
+    });
+
     await _carregarEntrega();
   }
 
@@ -164,20 +223,16 @@ class _TelaAtividadeState extends State<TelaAtividade> {
     final confirmar = await showDialog<bool>(
       context: context,
       builder: (dialogContext) => AlertDialog(
-        // <- use dialogContext aqui
         title: const Text('Cancelar entrega?'),
         content: const Text(
-          'Deseja remover sua entrega? Você poderá enviar novamente.',
-        ),
+            'Deseja remover sua entrega? Você poderá enviar novamente.'),
         actions: [
           TextButton(
-            onPressed: () =>
-                Navigator.of(dialogContext).pop(false), // <- dialogContext
+            onPressed: () => Navigator.of(dialogContext).pop(false),
             child: Text('Não', style: TextStyle(color: Colors.grey[600])),
           ),
           ElevatedButton(
-            onPressed: () =>
-                Navigator.of(dialogContext).pop(true), // <- dialogContext
+            onPressed: () => Navigator.of(dialogContext).pop(true),
             style: ElevatedButton.styleFrom(
               backgroundColor: const Color(0xFF8B0000),
               foregroundColor: Colors.white,
@@ -188,8 +243,8 @@ class _TelaAtividadeState extends State<TelaAtividade> {
       ),
     );
 
-    if (confirmar != true) return;
-    if (!mounted) return; // <- verifica antes de continuar
+    if (confirmar == null || !confirmar) return;
+    if (!mounted) return;
 
     try {
       await FirebaseFirestore.instance
@@ -226,15 +281,49 @@ class _TelaAtividadeState extends State<TelaAtividade> {
 
       setState(() => _entregaAtual = null);
 
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(const SnackBar(content: Text('Entrega cancelada.')));
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Entrega cancelada.')),
+      );
     } catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Erro ao cancelar entrega.')),
       );
     }
+  }
+
+  // ─── Abrir URL ────────────────────────────────────────────────────────────
+
+  Future<void> _abrirUrl(String url) async {
+    final uri = Uri.tryParse(url);
+    if (uri == null) return;
+    if (await canLaunchUrl(uri)) {
+      await launchUrl(uri, mode: LaunchMode.externalApplication);
+    }
+  }
+
+  String _contentType(String nome) {
+    final ext = nome.split('.').last.toLowerCase();
+    return switch (ext) {
+      'pdf'  => 'application/pdf',
+      'doc'  => 'application/msword',
+      'docx' => 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+      'png'  => 'image/png',
+      'jpg' || 'jpeg' => 'image/jpeg',
+      'zip'  => 'application/zip',
+      _ => 'application/octet-stream',
+    };
+  }
+
+  IconData _iconeArquivo(String nome) {
+    final ext = nome.split('.').last.toLowerCase();
+    return switch (ext) {
+      'pdf'  => Icons.picture_as_pdf_outlined,
+      'doc' || 'docx' => Icons.description_outlined,
+      'png' || 'jpg' || 'jpeg' => Icons.image_outlined,
+      'zip'  => Icons.folder_zip_outlined,
+      _ => Icons.attach_file,
+    };
   }
 
   // ─── Build ────────────────────────────────────────────────────────────────
@@ -252,21 +341,25 @@ class _TelaAtividadeState extends State<TelaAtividade> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            // Card principal da atividade
             _buildCardAtividade(),
             const SizedBox(height: 16),
 
-            // Seção de entrega (só para aluno)
-            if (!widget.isProfessor) ...[
+            // Anexos do professor
+            if (widget.anexosProfessor.isNotEmpty) ...[
+              _buildAnexosProfessor(),
+              const SizedBox(height: 16),
+            ],
+
+            // Seção do aluno
+            if (!widget.isProfessor)
               _carregandoEntrega
                   ? const Center(child: CircularProgressIndicator())
                   : _entregaAtual != null
-                  ? _buildEntregaRealizada()
-                  : _buildFormEntrega(),
-            ],
+                      ? _buildEntregaRealizada()
+                      : _buildFormEntrega(),
 
-            // Seção de entregas (só para professor)
-            if (widget.isProfessor) ...[_buildListaEntregasProfessor()],
+            // Seção do professor
+            if (widget.isProfessor) _buildListaEntregasProfessor(),
           ],
         ),
       ),
@@ -290,7 +383,6 @@ class _TelaAtividadeState extends State<TelaAtividade> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Título
           Text(
             widget.nome,
             style: TextStyle(
@@ -299,10 +391,8 @@ class _TelaAtividadeState extends State<TelaAtividade> {
               color: Theme.of(context).colorScheme.onSurface,
             ),
           ),
-          const SizedBox(height: 8),
-
-          // Disciplina
-          if (widget.disciplina != null)
+          if (widget.disciplina != null) ...[
+            const SizedBox(height: 4),
             Text(
               widget.disciplina!,
               style: TextStyle(
@@ -310,17 +400,12 @@ class _TelaAtividadeState extends State<TelaAtividade> {
                 color: Theme.of(context).colorScheme.onSurfaceVariant,
               ),
             ),
-
+          ],
           const SizedBox(height: 12),
-
-          // Data de entrega
           Row(
             children: [
-              const Icon(
-                Icons.calendar_today_outlined,
-                size: 16,
-                color: Color(0xFF8B0000),
-              ),
+              const Icon(Icons.calendar_today_outlined,
+                  size: 16, color: Color(0xFF8B0000)),
               const SizedBox(width: 6),
               Text(
                 'Data de entrega: ${widget.dataEntrega}',
@@ -332,7 +417,6 @@ class _TelaAtividadeState extends State<TelaAtividade> {
               ),
             ],
           ),
-
           if (widget.descricao.isNotEmpty) ...[
             const SizedBox(height: 12),
             const Divider(),
@@ -348,6 +432,63 @@ class _TelaAtividadeState extends State<TelaAtividade> {
           ],
         ],
       ),
+    );
+  }
+
+  // ─── Anexos do professor ──────────────────────────────────────────────────
+
+  Widget _buildAnexosProfessor() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          'Materiais anexados',
+          style: TextStyle(
+            fontSize: 14,
+            fontWeight: FontWeight.w700,
+            color: Theme.of(context).colorScheme.onSurface,
+          ),
+        ),
+        const SizedBox(height: 8),
+        ...widget.anexosProfessor.map((anexo) {
+          final nome = anexo['nome'] as String? ?? 'arquivo';
+          final url = anexo['url'] as String? ?? '';
+          return GestureDetector(
+            onTap: () => _abrirUrl(url),
+            child: Container(
+              margin: const EdgeInsets.only(bottom: 8),
+              padding:
+                  const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+              decoration: BoxDecoration(
+                color: Theme.of(context).colorScheme.surface,
+                borderRadius: BorderRadius.circular(10),
+                border: Border.all(
+                  color: const Color(0xFF8B0000).withValues(alpha: 0.3),
+                ),
+              ),
+              child: Row(
+                children: [
+                  Icon(_iconeArquivo(nome),
+                      color: const Color(0xFF8B0000), size: 22),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: Text(
+                      nome,
+                      style: TextStyle(
+                        fontSize: 13,
+                        color: Theme.of(context).colorScheme.onSurface,
+                      ),
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ),
+                  const Icon(Icons.download_outlined,
+                      color: Color(0xFF8B0000), size: 20),
+                ],
+              ),
+            ),
+          );
+        }),
+      ],
     );
   }
 
@@ -367,7 +508,6 @@ class _TelaAtividadeState extends State<TelaAtividade> {
         ),
         const SizedBox(height: 12),
 
-        // Campo de link
         Container(
           padding: const EdgeInsets.all(16),
           decoration: BoxDecoration(
@@ -384,8 +524,9 @@ class _TelaAtividadeState extends State<TelaAtividade> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
+              // Campo de link
               Text(
-                'Link',
+                'Link (Google Drive, GitHub...)',
                 style: TextStyle(
                   fontSize: 12,
                   fontWeight: FontWeight.w600,
@@ -396,8 +537,11 @@ class _TelaAtividadeState extends State<TelaAtividade> {
               TextField(
                 controller: _linkController,
                 keyboardType: TextInputType.url,
+                onChanged: (_) {
+                  if (_nomeArquivo != null) _removerArquivo();
+                },
                 decoration: InputDecoration(
-                  hintText: 'Cole o link aqui (Google Drive, GitHub...)',
+                  hintText: 'Cole o link aqui...',
                   hintStyle: TextStyle(
                     fontSize: 12,
                     color: Theme.of(context).colorScheme.onSurfaceVariant,
@@ -406,9 +550,7 @@ class _TelaAtividadeState extends State<TelaAtividade> {
                   filled: true,
                   fillColor: Theme.of(context).colorScheme.surfaceContainerLow,
                   contentPadding: const EdgeInsets.symmetric(
-                    horizontal: 12,
-                    vertical: 12,
-                  ),
+                      horizontal: 12, vertical: 12),
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(8),
                     borderSide: BorderSide.none,
@@ -416,65 +558,138 @@ class _TelaAtividadeState extends State<TelaAtividade> {
                   focusedBorder: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(8),
                     borderSide: const BorderSide(
-                      color: Color(0xFF8B0000),
-                      width: 1.5,
-                    ),
+                        color: Color(0xFF8B0000), width: 1.5),
                   ),
                 ),
               ),
+
+              const SizedBox(height: 16),
+
+              // Separador
+              Row(
+                children: [
+                  const Expanded(child: Divider()),
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 12),
+                    child: Text(
+                      'ou',
+                      style: TextStyle(
+                          fontSize: 12,
+                          color: Theme.of(context)
+                              .colorScheme
+                              .onSurfaceVariant),
+                    ),
+                  ),
+                  const Expanded(child: Divider()),
+                ],
+              ),
+
+              const SizedBox(height: 16),
+
+              // Arquivo selecionado ou botão de selecionar
+              if (_nomeArquivo != null)
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                      horizontal: 12, vertical: 10),
+                  decoration: BoxDecoration(
+                    color: Theme.of(context).colorScheme.surfaceContainerLow,
+                    borderRadius: BorderRadius.circular(8),
+                    border: Border.all(
+                      color:
+                          const Color(0xFF8B0000).withValues(alpha: 0.3),
+                    ),
+                  ),
+                  child: Row(
+                    children: [
+                      Icon(_iconeArquivo(_nomeArquivo!),
+                          color: const Color(0xFF8B0000), size: 20),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: Text(
+                          _nomeArquivo!,
+                          style: TextStyle(
+                              fontSize: 12,
+                              color: Theme.of(context)
+                                  .colorScheme
+                                  .onSurface),
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+                      IconButton(
+                        onPressed: _removerArquivo,
+                        icon: const Icon(Icons.close, size: 18),
+                        color: Colors.grey[600],
+                        padding: EdgeInsets.zero,
+                        constraints: const BoxConstraints(),
+                      ),
+                    ],
+                  ),
+                )
+              else
+                GestureDetector(
+                  onTap: _selecionarArquivo,
+                  child: Container(
+                    width: double.infinity,
+                    padding: const EdgeInsets.symmetric(vertical: 14),
+                    decoration: BoxDecoration(
+                      color: Theme.of(context).colorScheme.surfaceContainerLow,
+                      borderRadius: BorderRadius.circular(8),
+                      border: Border.all(
+                        color: Theme.of(context).colorScheme.outlineVariant,
+                      ),
+                    ),
+                    child: Column(
+                      children: [
+                        const Icon(Icons.upload_file_outlined,
+                            color: Color(0xFF8B0000), size: 28),
+                        const SizedBox(height: 6),
+                        Text(
+                          'Selecionar arquivo',
+                          style: TextStyle(
+                            fontSize: 13,
+                            color: Theme.of(context).colorScheme.onSurface,
+                          ),
+                        ),
+                        const SizedBox(height: 2),
+                        Text(
+                          'PDF, DOC, imagens, ZIP — máx. 50 MB',
+                          style: TextStyle(
+                            fontSize: 10,
+                            color: Theme.of(context)
+                                .colorScheme
+                                .onSurfaceVariant,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
             ],
           ),
         ),
 
         const SizedBox(height: 12),
 
-        // Botões
-        Row(
-          children: [
-            Expanded(
-              child: ElevatedButton.icon(
-                onPressed: _enviando ? null : _enviarArquivo,
-                icon: const Icon(Icons.attach_file, size: 19),
-                label: const Text('Anexar PDF'),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Theme.of(context).colorScheme.surface,
-                  foregroundColor: const Color(0xFF8B0000),
-                  elevation: 1,
-                  padding: const EdgeInsets.symmetric(vertical: 13),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(8),
-                    side: const BorderSide(color: Color(0xFF8B0000)),
-                  ),
-                ),
-              ),
-            ),
-            const SizedBox(width: 10),
-            Expanded(
-              child: ElevatedButton.icon(
-                onPressed: _enviando ? null : _enviarLink,
-                icon: _enviando
-                    ? const SizedBox(
-                        width: 17,
-                        height: 17,
-                        child: CircularProgressIndicator(
-                          strokeWidth: 2,
-                          color: Colors.white,
-                        ),
-                      )
-                    : const Icon(Icons.send, size: 19),
-                label: Text(_enviando ? 'Enviando...' : 'Enviar'),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color(0xFF8B0000),
-                  foregroundColor: Colors.white,
-                  disabledBackgroundColor: Colors.grey,
-                  padding: const EdgeInsets.symmetric(vertical: 13),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                ),
-              ),
-            ),
-          ],
+        // Botão enviar
+        ElevatedButton.icon(
+          onPressed: _enviando ? null : _enviarEntrega,
+          icon: _enviando
+              ? const SizedBox(
+                  width: 17,
+                  height: 17,
+                  child: CircularProgressIndicator(
+                      strokeWidth: 2, color: Colors.white),
+                )
+              : const Icon(Icons.send, size: 19),
+          label: Text(_enviando ? 'Enviando...' : 'Enviar atividade'),
+          style: ElevatedButton.styleFrom(
+            backgroundColor: const Color(0xFF8B0000),
+            foregroundColor: Colors.white,
+            disabledBackgroundColor: Colors.grey,
+            padding: const EdgeInsets.symmetric(vertical: 14),
+            shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(8)),
+          ),
         ),
       ],
     );
@@ -485,6 +700,7 @@ class _TelaAtividadeState extends State<TelaAtividade> {
   Widget _buildEntregaRealizada() {
     final tipo = _entregaAtual!['tipo'] as String? ?? '';
     final valor = _entregaAtual!['valor'] as String? ?? '';
+    final nomeArquivo = _entregaAtual!['nomeArquivo'] as String?;
     final entregueEm = _entregaAtual!['entregueEm'] as Timestamp?;
 
     String horario = '';
@@ -527,34 +743,44 @@ class _TelaAtividadeState extends State<TelaAtividade> {
           ),
           const SizedBox(height: 12),
 
-          // Tipo e valor da entrega
-          Container(
-            padding: const EdgeInsets.all(12),
-            decoration: BoxDecoration(
-              color: Theme.of(context).colorScheme.surfaceContainerLow,
-              borderRadius: BorderRadius.circular(8),
-            ),
-            child: Row(
-              children: [
-                Icon(
-                  tipo == 'texto'
-                      ? Icons.check
-                      : (tipo == 'link' ? Icons.link : Icons.attach_file),
-                  size: 20,
-                  color: const Color(0xFF8B0000),
-                ),
-                const SizedBox(width: 8),
-                Expanded(
-                  child: Text(
-                    valor,
-                    style: TextStyle(
-                      fontSize: 13,
-                      color: Theme.of(context).colorScheme.onSurface,
-                    ),
-                    overflow: TextOverflow.ellipsis,
+          // Entrega
+          GestureDetector(
+            onTap: tipo == 'arquivo' || tipo == 'link'
+                ? () => _abrirUrl(valor)
+                : null,
+            child: Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: Theme.of(context).colorScheme.surfaceContainerLow,
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Row(
+                children: [
+                  Icon(
+                    tipo == 'link'
+                        ? Icons.link
+                        : _iconeArquivo(nomeArquivo ?? ''),
+                    size: 20,
+                    color: const Color(0xFF8B0000),
                   ),
-                ),
-              ],
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Text(
+                      tipo == 'arquivo'
+                          ? (nomeArquivo ?? valor)
+                          : valor,
+                      style: TextStyle(
+                        fontSize: 13,
+                        color: const Color(0xFF8B0000),
+                        decoration: TextDecoration.underline,
+                      ),
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ),
+                  const Icon(Icons.open_in_new,
+                      size: 16, color: Color(0xFF8B0000)),
+                ],
+              ),
             ),
           ),
 
@@ -571,7 +797,6 @@ class _TelaAtividadeState extends State<TelaAtividade> {
 
           const SizedBox(height: 16),
 
-          // Botão cancelar entrega
           SizedBox(
             width: double.infinity,
             child: OutlinedButton.icon(
@@ -583,8 +808,7 @@ class _TelaAtividadeState extends State<TelaAtividade> {
                 side: const BorderSide(color: Color(0xFF8B0000)),
                 padding: const EdgeInsets.symmetric(vertical: 12),
                 shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(8),
-                ),
+                    borderRadius: BorderRadius.circular(8)),
               ),
             ),
           ),
@@ -608,7 +832,6 @@ class _TelaAtividadeState extends State<TelaAtividade> {
           ),
         ),
         const SizedBox(height: 12),
-
         StreamBuilder<QuerySnapshot>(
           stream: FirebaseFirestore.instance
               .collection('turmas')
@@ -658,6 +881,7 @@ class _TelaAtividadeState extends State<TelaAtividade> {
   Widget _buildCardEntregaProfessor(Map<String, dynamic> dados) {
     final tipo = dados['tipo'] as String? ?? '';
     final valor = dados['valor'] as String? ?? '';
+    final nomeArquivo = dados['nomeArquivo'] as String?;
     final uid = dados['uid'] as String? ?? '';
     final entregueEm = dados['entregueEm'] as Timestamp?;
 
@@ -669,7 +893,10 @@ class _TelaAtividadeState extends State<TelaAtividade> {
     }
 
     return FutureBuilder<DocumentSnapshot>(
-      future: FirebaseFirestore.instance.collection('usuarios').doc(uid).get(),
+      future: FirebaseFirestore.instance
+          .collection('usuarios')
+          .doc(uid)
+          .get(),
       builder: (context, snapshot) {
         final data = snapshot.data?.data() as Map<String, dynamic>?;
         final nomeAluno =
@@ -679,82 +906,88 @@ class _TelaAtividadeState extends State<TelaAtividade> {
             ? (data?['nome'] as String?) ?? uid
             : uid;
 
-        return Container(
-          margin: const EdgeInsets.only(bottom: 8),
-          padding: const EdgeInsets.all(14),
-          decoration: BoxDecoration(
-            color: Theme.of(context).colorScheme.surface,
-            borderRadius: BorderRadius.circular(12),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withValues(alpha: 0.05),
-                blurRadius: 4,
-                offset: const Offset(0, 2),
-              ),
-            ],
-          ),
-          child: Row(
-            children: [
-              Container(
-                width: 40,
-                height: 40,
-                decoration: BoxDecoration(
-                  color: const Color(0xFF8B0000).withValues(alpha: 0.1),
-                  shape: BoxShape.circle,
+        return GestureDetector(
+          onTap: () => _abrirUrl(valor),
+          child: Container(
+            margin: const EdgeInsets.only(bottom: 8),
+            padding: const EdgeInsets.all(14),
+            decoration: BoxDecoration(
+              color: Theme.of(context).colorScheme.surface,
+              borderRadius: BorderRadius.circular(12),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withValues(alpha: 0.05),
+                  blurRadius: 4,
+                  offset: const Offset(0, 2),
                 ),
-                child: const Icon(
-                  Icons.person,
-                  color: Color(0xFF8B0000),
-                  size: 22,
+              ],
+            ),
+            child: Row(
+              children: [
+                Container(
+                  width: 40,
+                  height: 40,
+                  decoration: BoxDecoration(
+                    color: const Color(0xFF8B0000).withValues(alpha: 0.1),
+                    shape: BoxShape.circle,
+                  ),
+                  child: const Icon(Icons.person,
+                      color: Color(0xFF8B0000), size: 22),
                 ),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      nomeAluno,
-                      style: TextStyle(
-                        fontSize: 13,
-                        fontWeight: FontWeight.w600,
-                        color: Theme.of(context).colorScheme.onSurface,
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        nomeAluno,
+                        style: TextStyle(
+                          fontSize: 13,
+                          fontWeight: FontWeight.w600,
+                          color: Theme.of(context).colorScheme.onSurface,
+                        ),
                       ),
-                    ),
-                    const SizedBox(height: 4),
-                    Row(
-                      children: [
-                        Icon(
-                          tipo == 'link' ? Icons.link : Icons.attach_file,
-                          size: 14,
-                          color: Theme.of(context).colorScheme.onSurfaceVariant,
-                        ),
-                        const SizedBox(width: 4),
-                        Expanded(
-                          child: Text(
-                            valor,
-                            style: TextStyle(
-                              fontSize: 12,
-                              color: const Color(0xFF8B0000),
-                              decoration: TextDecoration.underline,
-                            ),
-                            overflow: TextOverflow.ellipsis,
+                      const SizedBox(height: 4),
+                      Row(
+                        children: [
+                          Icon(
+                            tipo == 'link'
+                                ? Icons.link
+                                : _iconeArquivo(nomeArquivo ?? ''),
+                            size: 14,
+                            color: Theme.of(context)
+                                .colorScheme
+                                .onSurfaceVariant,
                           ),
-                        ),
-                      ],
-                    ),
-                  ],
-                ),
-              ),
-              if (horario.isNotEmpty)
-                Text(
-                  horario,
-                  style: TextStyle(
-                    fontSize: 10,
-                    color: Theme.of(context).colorScheme.onSurfaceVariant,
+                          const SizedBox(width: 4),
+                          Expanded(
+                            child: Text(
+                              tipo == 'arquivo'
+                                  ? (nomeArquivo ?? valor)
+                                  : valor,
+                              style: const TextStyle(
+                                fontSize: 12,
+                                color: Color(0xFF8B0000),
+                                decoration: TextDecoration.underline,
+                              ),
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
                   ),
                 ),
-            ],
+                if (horario.isNotEmpty)
+                  Text(
+                    horario,
+                    style: TextStyle(
+                      fontSize: 10,
+                      color: Theme.of(context).colorScheme.onSurfaceVariant,
+                    ),
+                  ),
+              ],
+            ),
           ),
         );
       },
