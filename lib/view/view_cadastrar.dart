@@ -1,6 +1,8 @@
 import '../controllers/cadastrar_controller.dart';
+
 import 'package:flutter/material.dart';
 import 'package:fatechub2/controllers/theme_controller.dart';
+
 import 'app_shell.dart';
 
 class TelaCadastro extends StatefulWidget {
@@ -17,6 +19,7 @@ class TelaCadastro extends StatefulWidget {
 
 class _TelaCadastroState extends State<TelaCadastro> {
   final CadastroController _controller = CadastroController();
+
   String? _perfilSelecionado;
 
   @override
@@ -65,12 +68,16 @@ class _TelaCadastroState extends State<TelaCadastro> {
                       const SizedBox(height: 80),
                       _buildLogo(),
                       const SizedBox(height: 40),
+
                       if (_perfilSelecionado == null)
                         _buildSelecaoPerfil()
                       else if (_perfilSelecionado == 'aluno')
                         _buildFormularioAluno()
+                      else if (_perfilSelecionado == 'professor')
+                        _buildFormularioProfessor()
                       else
-                        _buildFormularioProfessor(),
+                        _buildFormularioCoordenador(),
+
                       const SizedBox(height: 40),
                     ],
                   ),
@@ -84,7 +91,7 @@ class _TelaCadastroState extends State<TelaCadastro> {
     );
   }
 
-  // ─── Seleção de perfil ────────────────────────────────────────────────────
+  // ─── Seleção de perfil ──────────────────────────────────────────────────
 
   Widget _buildSelecaoPerfil() {
     return Column(
@@ -97,9 +104,8 @@ class _TelaCadastroState extends State<TelaCadastro> {
               Icon(
                 Icons.arrow_back_ios,
                 size: 16,
-                color: Theme.of(context)
-                    .colorScheme
-                    .onSurfaceVariant,
+                color:
+                    Theme.of(context).colorScheme.onSurfaceVariant,
               ),
               const SizedBox(width: 4),
               Text(
@@ -114,29 +120,33 @@ class _TelaCadastroState extends State<TelaCadastro> {
             ],
           ),
         ),
+
         const SizedBox(height: 24),
+
         Text(
           'Quem é você?',
           textAlign: TextAlign.center,
           style: TextStyle(
             fontSize: 20,
             fontWeight: FontWeight.w600,
-            color:
-                Theme.of(context).colorScheme.onSurface,
+            color: Theme.of(context).colorScheme.onSurface,
           ),
         ),
+
         const SizedBox(height: 8),
+
         Text(
           'Selecione o seu perfil para continuar o cadastro.',
           textAlign: TextAlign.center,
           style: TextStyle(
             fontSize: 14,
-            color: Theme.of(context)
-                .colorScheme
-                .onSurfaceVariant,
+            color:
+                Theme.of(context).colorScheme.onSurfaceVariant,
           ),
         ),
+
         const SizedBox(height: 32),
+
         _buildBotaoPerfil(
           label: 'Aluno',
           icone: Icons.school_outlined,
@@ -144,12 +154,24 @@ class _TelaCadastroState extends State<TelaCadastro> {
             setState(() => _perfilSelecionado = 'aluno');
           },
         ),
+
         const SizedBox(height: 16),
+
         _buildBotaoPerfil(
           label: 'Professor',
           icone: Icons.person_outlined,
           onTap: () {
             setState(() => _perfilSelecionado = 'professor');
+          },
+        ),
+
+        const SizedBox(height: 16),
+
+        _buildBotaoPerfil(
+          label: 'Coordenador',
+          icone: Icons.admin_panel_settings_outlined,
+          onTap: () {
+            setState(() => _perfilSelecionado = 'coordenador');
           },
         ),
       ],
@@ -167,22 +189,17 @@ class _TelaCadastroState extends State<TelaCadastro> {
         padding:
             const EdgeInsets.symmetric(vertical: 20),
         decoration: BoxDecoration(
-          color: Theme.of(context)
-              .colorScheme
-              .surface,
-          borderRadius:
-              BorderRadius.circular(12),
+          color: Theme.of(context).colorScheme.surface,
+          borderRadius: BorderRadius.circular(12),
           border: Border.all(
-            color: const Color(0xFF8B0000)
-                .withOpacity(0.4),
+            color:
+                const Color(0xFF8B0000).withOpacity(0.4),
           ),
           boxShadow: [
             BoxShadow(
-              color:
-                  Colors.black.withOpacity(0.05),
+              color: Colors.black.withOpacity(0.05),
               blurRadius: 6,
-              offset:
-                  const Offset(0, 2),
+              offset: const Offset(0, 2),
             ),
           ],
         ),
@@ -192,8 +209,7 @@ class _TelaCadastroState extends State<TelaCadastro> {
           children: [
             Icon(
               icone,
-              color:
-                  const Color(0xFF8B0000),
+              color: const Color(0xFF8B0000),
               size: 28,
             ),
             const SizedBox(width: 12),
@@ -201,11 +217,9 @@ class _TelaCadastroState extends State<TelaCadastro> {
               label,
               style: TextStyle(
                 fontSize: 18,
-                fontWeight:
-                    FontWeight.w600,
-                color: Theme.of(context)
-                    .colorScheme
-                    .onSurface,
+                fontWeight: FontWeight.w600,
+                color:
+                    Theme.of(context).colorScheme.onSurface,
               ),
             ),
           ],
@@ -214,14 +228,14 @@ class _TelaCadastroState extends State<TelaCadastro> {
     );
   }
 
-  // ─── Formulário Aluno ─────────────────────────────────────────────────────
+  // ─── Formulário Aluno ───────────────────────────────────────────────────
 
   Widget _buildFormularioAluno() {
     return Column(
-      crossAxisAlignment:
-          CrossAxisAlignment.stretch,
+      crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         _buildBotaoVoltar(),
+
         const SizedBox(height: 20),
 
         _buildLabel('Nome'),
@@ -246,15 +260,11 @@ class _TelaCadastroState extends State<TelaCadastro> {
         const SizedBox(height: 6),
         _buildDropdownSemestre(),
 
-        // ─── NOVO CAMPO: TURNO ────────────────────────────────────────
-
         const SizedBox(height: 20),
 
         _buildLabel('Turno'),
         const SizedBox(height: 6),
         _buildDropdownTurno(),
-
-        // ──────────────────────────────────────────────────────────────
 
         const SizedBox(height: 20),
 
@@ -288,14 +298,14 @@ class _TelaCadastroState extends State<TelaCadastro> {
     );
   }
 
-  // ─── Formulário Professor ─────────────────────────────────────────────────
+  // ─── Formulário Professor ───────────────────────────────────────────────
 
   Widget _buildFormularioProfessor() {
     return Column(
-      crossAxisAlignment:
-          CrossAxisAlignment.stretch,
+      crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         _buildBotaoVoltar(),
+
         const SizedBox(height: 20),
 
         _buildLabel('Nome'),
@@ -334,14 +344,59 @@ class _TelaCadastroState extends State<TelaCadastro> {
         const SizedBox(height: 28),
 
         _buildBotaoCadastrar(
-          onPressed:
-              _controller.cadastrarProfessor,
+          onPressed: _controller.cadastrarProfessor,
         ),
       ],
     );
   }
 
-  // ─── Dropdowns ────────────────────────────────────────────────────────────
+  // ─── Formulário Coordenador ─────────────────────────────────────────────
+
+  Widget _buildFormularioCoordenador() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        _buildBotaoVoltar(),
+
+        const SizedBox(height: 20),
+
+        _buildLabel('Nome'),
+        const SizedBox(height: 6),
+        _buildCampoNome(),
+
+        const SizedBox(height: 20),
+
+        _buildLabel('Email'),
+        const SizedBox(height: 6),
+        _buildCampoEmail(),
+
+        const SizedBox(height: 20),
+
+        _buildLabel('Senha'),
+        const SizedBox(height: 6),
+        _buildCampoSenha(),
+
+        const SizedBox(height: 6),
+
+        _buildLabel('Confirmar Senha'),
+        const SizedBox(height: 6),
+        _buildCampoConfSenha(),
+
+        if (_controller.mensagemErro != null) ...[
+          const SizedBox(height: 12),
+          _buildMensagemErro(),
+        ],
+
+        const SizedBox(height: 28),
+
+        _buildBotaoCadastrar(
+          onPressed: _controller.cadastrarCoordenador,
+        ),
+      ],
+    );
+  }
+
+  // ─── Dropdowns ──────────────────────────────────────────────────────────
 
   Widget _buildDropdownCurso() {
     return DropdownButtonFormField<String>(
@@ -349,9 +404,8 @@ class _TelaCadastroState extends State<TelaCadastro> {
       hint: Text(
         'Selecione o seu curso',
         style: TextStyle(
-          color: Theme.of(context)
-              .colorScheme
-              .onSurfaceVariant,
+          color:
+              Theme.of(context).colorScheme.onSurfaceVariant,
           fontSize: 14,
         ),
       ),
@@ -371,7 +425,7 @@ class _TelaCadastroState extends State<TelaCadastro> {
     );
   }
 
-  // ─── Dropdown Semestre ────────────────────────────────────────────────────
+  // ─── Dropdown Semestre ──────────────────────────────────────────────────
 
   Widget _buildDropdownSemestre() {
     return DropdownButtonFormField<int>(
@@ -379,17 +433,15 @@ class _TelaCadastroState extends State<TelaCadastro> {
       hint: Text(
         'Selecione o seu semestre',
         style: TextStyle(
-          color: Theme.of(context)
-              .colorScheme
-              .onSurfaceVariant,
+          color:
+              Theme.of(context).colorScheme.onSurfaceVariant,
           fontSize: 14,
         ),
       ),
       decoration: _inputDecoration(),
       items: CadastroController.semestres
           .map(
-            (semestre) =>
-                DropdownMenuItem<int>(
+            (semestre) => DropdownMenuItem<int>(
               value: semestre,
               child: Text('$semestreº Semestre'),
             ),
@@ -402,7 +454,7 @@ class _TelaCadastroState extends State<TelaCadastro> {
     );
   }
 
-  // ─── Dropdown Turno ───────────────────────────────────────────────────────
+  // ─── Dropdown Turno ─────────────────────────────────────────────────────
 
   Widget _buildDropdownTurno() {
     return DropdownButtonFormField<String>(
@@ -410,9 +462,8 @@ class _TelaCadastroState extends State<TelaCadastro> {
       hint: Text(
         'Selecione o seu turno',
         style: TextStyle(
-          color: Theme.of(context)
-              .colorScheme
-              .onSurfaceVariant,
+          color:
+              Theme.of(context).colorScheme.onSurfaceVariant,
           fontSize: 14,
         ),
       ),
@@ -436,14 +487,12 @@ class _TelaCadastroState extends State<TelaCadastro> {
 
   Widget _buildDropdownDisciplina() {
     return DropdownButtonFormField<String>(
-      value:
-          _controller.disciplinaSelecionada,
+      value: _controller.disciplinaSelecionada,
       hint: Text(
         'Selecione a sua disciplina',
         style: TextStyle(
-          color: Theme.of(context)
-              .colorScheme
-              .onSurfaceVariant,
+          color:
+              Theme.of(context).colorScheme.onSurfaceVariant,
           fontSize: 14,
         ),
       ),
@@ -464,7 +513,7 @@ class _TelaCadastroState extends State<TelaCadastro> {
     );
   }
 
-  // ─── Campos comuns ────────────────────────────────────────────────────────
+  // ─── Campos comuns ──────────────────────────────────────────────────────
 
   Widget _buildBotaoVoltar() {
     return GestureDetector(
@@ -476,18 +525,16 @@ class _TelaCadastroState extends State<TelaCadastro> {
           Icon(
             Icons.arrow_back_ios,
             size: 16,
-            color: Theme.of(context)
-                .colorScheme
-                .onSurfaceVariant,
+            color:
+                Theme.of(context).colorScheme.onSurfaceVariant,
           ),
           const SizedBox(width: 4),
           Text(
             'Voltar',
             style: TextStyle(
               fontSize: 14,
-              color: Theme.of(context)
-                  .colorScheme
-                  .onSurfaceVariant,
+              color:
+                  Theme.of(context).colorScheme.onSurfaceVariant,
             ),
           ),
         ],
@@ -504,9 +551,8 @@ class _TelaCadastroState extends State<TelaCadastro> {
           style: TextStyle(
             fontSize: 64,
             fontWeight: FontWeight.bold,
-            color: Theme.of(context)
-                .colorScheme
-                .onSurface,
+            color:
+                Theme.of(context).colorScheme.onSurface,
             height: 1.1,
           ),
         ),
@@ -516,11 +562,9 @@ class _TelaCadastroState extends State<TelaCadastro> {
           textAlign: TextAlign.center,
           style: TextStyle(
             fontSize: 16,
-            color: Theme.of(context)
-                .colorScheme
-                .onSurface,
-            fontWeight:
-                FontWeight.w400,
+            color:
+                Theme.of(context).colorScheme.onSurface,
+            fontWeight: FontWeight.w400,
           ),
         ),
       ],
@@ -532,66 +576,47 @@ class _TelaCadastroState extends State<TelaCadastro> {
       texto,
       style: TextStyle(
         fontSize: 15,
-        color: Theme.of(context)
-            .colorScheme
-            .onSurfaceVariant,
-        fontWeight:
-            FontWeight.w500,
+        color:
+            Theme.of(context).colorScheme.onSurfaceVariant,
+        fontWeight: FontWeight.w500,
       ),
     );
   }
 
   Widget _buildCampoNome() {
     return TextField(
-      controller:
-          _controller.nomeController,
-      keyboardType:
-          TextInputType.text,
-      onChanged: (_) =>
-          _controller.resetarErro(),
-      decoration:
-          _inputDecoration(),
+      controller: _controller.nomeController,
+      keyboardType: TextInputType.text,
+      onChanged: (_) => _controller.resetarErro(),
+      decoration: _inputDecoration(),
     );
   }
 
   Widget _buildCampoEmail() {
     return TextField(
-      controller:
-          _controller.emailController,
-      keyboardType:
-          TextInputType.emailAddress,
-      onChanged: (_) =>
-          _controller.resetarErro(),
-      decoration:
-          _inputDecoration(),
+      controller: _controller.emailController,
+      keyboardType: TextInputType.emailAddress,
+      onChanged: (_) => _controller.resetarErro(),
+      decoration: _inputDecoration(),
     );
   }
 
   Widget _buildCampoRA() {
     return TextField(
-      controller:
-          _controller.raController,
-      keyboardType:
-          TextInputType.number,
-      onChanged: (_) =>
-          _controller.resetarErro(),
-      decoration:
-          _inputDecoration(),
+      controller: _controller.raController,
+      keyboardType: TextInputType.number,
+      onChanged: (_) => _controller.resetarErro(),
+      decoration: _inputDecoration(),
     );
   }
 
   Widget _buildCampoSenha() {
     return TextField(
-      controller:
-          _controller.senhaController,
-      obscureText:
-          !_controller.senhaVisivel,
-      onChanged: (_) =>
-          _controller.resetarErro(),
-      decoration:
-          _inputDecoration(
-        suffixIcon:
-            IconButton(
+      controller: _controller.senhaController,
+      obscureText: !_controller.senhaVisivel,
+      onChanged: (_) => _controller.resetarErro(),
+      decoration: _inputDecoration(
+        suffixIcon: IconButton(
           icon: Icon(
             _controller.senhaVisivel
                 ? Icons.visibility_off_outlined
@@ -602,8 +627,7 @@ class _TelaCadastroState extends State<TelaCadastro> {
             size: 22,
           ),
           onPressed:
-              _controller
-                  .toggleSenhaVisivel,
+              _controller.toggleSenhaVisivel,
         ),
       ),
     );
@@ -613,14 +637,10 @@ class _TelaCadastroState extends State<TelaCadastro> {
     return TextField(
       controller:
           _controller.confirmarSenhaController,
-      obscureText:
-          !_controller.confirmarSenhaVisivel,
-      onChanged: (_) =>
-          _controller.resetarErro(),
-      decoration:
-          _inputDecoration(
-        suffixIcon:
-            IconButton(
+      obscureText: !_controller.confirmarSenhaVisivel,
+      onChanged: (_) => _controller.resetarErro(),
+      decoration: _inputDecoration(
+        suffixIcon: IconButton(
           icon: Icon(
             _controller.confirmarSenhaVisivel
                 ? Icons.visibility_off_outlined
@@ -631,8 +651,7 @@ class _TelaCadastroState extends State<TelaCadastro> {
             size: 22,
           ),
           onPressed:
-              _controller
-                  .toggleConfirmarSenhaVisivel,
+              _controller.toggleConfirmarSenhaVisivel,
         ),
       ),
     );
@@ -648,44 +667,40 @@ class _TelaCadastroState extends State<TelaCadastro> {
         horizontal: 12,
         vertical: 14,
       ),
-      border:
-          OutlineInputBorder(
+      border: OutlineInputBorder(
         borderRadius:
             BorderRadius.circular(4),
-        borderSide:
-            BorderSide(
+        borderSide: BorderSide(
           color: Theme.of(context)
               .colorScheme
               .onSurface,
         ),
       ),
-      enabledBorder:
-          OutlineInputBorder(
+      enabledBorder: OutlineInputBorder(
         borderRadius:
             BorderRadius.circular(4),
-        borderSide:
-            BorderSide(
+        borderSide: BorderSide(
           color: Theme.of(context)
               .colorScheme
               .onSurface,
         ),
       ),
-      focusedBorder:
-          OutlineInputBorder(
+      focusedBorder: const OutlineInputBorder(
         borderRadius:
-            BorderRadius.circular(4),
-        borderSide:
-            const BorderSide(
+            BorderRadius.all(
+          Radius.circular(4),
+        ),
+        borderSide: BorderSide(
           color: Color(0xFF8B0000),
           width: 1.5,
         ),
       ),
-      errorBorder:
-          OutlineInputBorder(
+      errorBorder: const OutlineInputBorder(
         borderRadius:
-            BorderRadius.circular(4),
-        borderSide:
-            const BorderSide(
+            BorderRadius.all(
+          Radius.circular(4),
+        ),
+        borderSide: BorderSide(
           color: Color(0xFF8B0000),
         ),
       ),
@@ -714,15 +729,13 @@ class _TelaCadastroState extends State<TelaCadastro> {
               _controller.carregando
                   ? null
                   : onPressed,
-          style:
-              ElevatedButton.styleFrom(
+          style: ElevatedButton.styleFrom(
             backgroundColor:
                 const Color(0xFF8B0000),
             disabledBackgroundColor:
                 const Color(0xFF8B0000)
                     .withOpacity(0.6),
-            foregroundColor:
-                Colors.white,
+            foregroundColor: Colors.white,
             elevation: 2,
             shape:
                 RoundedRectangleBorder(
@@ -730,25 +743,24 @@ class _TelaCadastroState extends State<TelaCadastro> {
                   BorderRadius.circular(6),
             ),
           ),
-          child:
-              _controller.carregando
-                  ? const SizedBox(
-                      width: 20,
-                      height: 20,
-                      child:
-                          CircularProgressIndicator(
-                        color: Colors.white,
-                        strokeWidth: 2,
-                      ),
-                    )
-                  : const Text(
-                      'Cadastrar',
-                      style: TextStyle(
-                        fontSize: 16,
-                        fontWeight:
-                            FontWeight.w600,
-                      ),
-                    ),
+          child: _controller.carregando
+              ? const SizedBox(
+                  width: 20,
+                  height: 20,
+                  child:
+                      CircularProgressIndicator(
+                    color: Colors.white,
+                    strokeWidth: 2,
+                  ),
+                )
+              : const Text(
+                  'Cadastrar',
+                  style: TextStyle(
+                    fontSize: 16,
+                    fontWeight:
+                        FontWeight.w600,
+                  ),
+                ),
         ),
       ),
     );
@@ -778,6 +790,12 @@ class _TelaCadastroState extends State<TelaCadastro> {
             normal:
                 ' Faça login com seu e-mail e senha.',
           ),
+          SizedBox(height: 10),
+          _RodapeTexto(
+            negrito: 'COORDENADOR:',
+            normal:
+                ' Faça login com seu e-mail e senha.',
+          ),
         ],
       ),
     );
@@ -803,8 +821,7 @@ class _RodapeTexto extends StatelessWidget {
             style: const TextStyle(
               color: Colors.white,
               fontSize: 13,
-              fontWeight:
-                  FontWeight.bold,
+              fontWeight: FontWeight.bold,
             ),
           ),
           TextSpan(
@@ -812,8 +829,7 @@ class _RodapeTexto extends StatelessWidget {
             style: const TextStyle(
               color: Colors.white,
               fontSize: 13,
-              fontWeight:
-                  FontWeight.w400,
+              fontWeight: FontWeight.w400,
             ),
           ),
         ],
@@ -821,4 +837,3 @@ class _RodapeTexto extends StatelessWidget {
     );
   }
 }
-
