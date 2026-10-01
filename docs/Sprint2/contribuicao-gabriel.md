@@ -7,8 +7,8 @@
 |---|---|---|
 | Correções de bugs e melhorias no chat do messenger | Commit 14820f3 | Mergeado |
 | Tela da Atividade | Commit 139743f / e6c1145 | Mergeado |
-| Funcionalidade de anexar documentos nas respostas | Commit e6c1145 | Mergeado |
 | Funcionalidade de entregar e cancelar entregas das atividades | Commit 65a5777 | Mergeado |
+| Funcionalidade de anexar documentos nas respostas | Commit ad9df91 | Mergeado |
 
 ## 2. Rituais que participei
 - [X] 1/1 Reuniões
