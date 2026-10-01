@@ -13,7 +13,6 @@ class CadastroController extends ChangeNotifier {
       TextEditingController();
 
   CadastroEstado _estado = CadastroEstado.inicial;
-
   bool _senhaVisivel = false;
   bool _confirmarSenhaVisivel = false;
 
@@ -198,6 +197,34 @@ class CadastroController extends ChangeNotifier {
     return true;
   }
 
+  // ─── Validação do coordenador ───────────────────────────────────────────
+
+  bool validarCoordenador() {
+    if (nomeController.text.trim().isEmpty) {
+      return _setErro('Informe o nome.');
+    }
+
+    if (emailController.text.trim().isEmpty) {
+      return _setErro('Informe o e-mail.');
+    }
+
+    if (senhaController.text.isEmpty) {
+      return _setErro('Informe a senha.');
+    }
+
+    if (senhaController.text.length < 6) {
+      return _setErro(
+        'A senha deve ter pelo menos 6 caracteres.',
+      );
+    }
+
+    if (confirmarSenhaController.text != senhaController.text) {
+      return _setErro('As senhas não coincidem.');
+    }
+
+    return true;
+  }
+
   bool _setErro(String mensagem) {
     _mensagemErro = mensagem;
     _estado = CadastroEstado.erro;
@@ -232,6 +259,17 @@ class CadastroController extends ChangeNotifier {
         'disciplina': _disciplinaSelecionada,
         'curso': 'Análise e Desenvolvimento de Sistemas',
       },
+    );
+  }
+
+  // ─── Cadastro do coordenador ────────────────────────────────────────────
+
+  Future<void> cadastrarCoordenador() async {
+    if (!validarCoordenador()) return;
+
+    await _cadastrar(
+      perfil: 'coordenador',
+      extras: {},
     );
   }
 
@@ -305,8 +343,6 @@ class CadastroController extends ChangeNotifier {
     emailController.dispose();
     senhaController.dispose();
     confirmarSenhaController.dispose();
-
     super.dispose();
   }
 }
-

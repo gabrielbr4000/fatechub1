@@ -1,19 +1,24 @@
 name: fatechub2
+
 description: "Uma solução para a falta de comunicação."
+
 publish_to: 'none'
+
 version: 0.1.0+1
 
 environment:
   sdk: ^3.11.3
 
 dependencies:
-  cloud_firestore: ^6.3.0
-  device_preview_plus: ^2.6.1
-  firebase_storage: 13.5.0
-  firebase_auth: ^6.4.0
-  firebase_core: ^4.7.0
   flutter:
     sdk: flutter
+
+  cloud_firestore: ^6.10.0
+  firebase_auth: ^6.7.0
+  firebase_core: ^4.15.0
+  firebase_storage: ^13.5.0
+
+  device_preview_plus: ^2.6.1
   get_it: ^9.2.1
   record: ^5.0.0
   audioplayers: ^6.0.0
@@ -22,12 +27,14 @@ dependencies:
   file_picker: ^9.0.0
   url_launcher: ^6.3.0
 
+  file_picker: ^10.3.3
+  url_launcher: ^6.3.2
+
 dev_dependencies:
   flutter_test:
     sdk: flutter
-  flutter_lints: ^6.0.0
 
+  flutter_lints: ^6.0.0
 
 flutter:
   uses-material-design: true
-
