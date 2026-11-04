@@ -413,12 +413,32 @@ class _TelaAtividadesState extends State<TelaAtividades> {
                 tooltip: 'Excluir atividade',
               )
             else
-              _buildStatus(entregue),
+              _buildStatusAluno(id),
           ],
         ),
       ),
     );
   }
+
+  Widget _buildStatusAluno(String atividadeId) {
+    final uid = FirebaseAuth.instance.currentUser?.uid;
+    if (uid == null) return _buildStatus(false);
+
+    return StreamBuilder<DocumentSnapshot>(
+      stream: FirebaseFirestore.instance
+          .collection('turmas')
+          .doc(widget.nomeTurma)
+          .collection('atividades')
+          .doc(atividadeId)
+          .collection('entregas')
+          .doc(uid)
+          .snapshots(),
+      builder: (context, snapshot) {
+        final entregue = snapshot.data?.exists ?? false;
+        return _buildStatus(entregue);
+      },
+    );
+  } 
 
   Widget _buildStatus(bool entregue) {
     return Column(

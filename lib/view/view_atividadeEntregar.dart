@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:typed_data';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:fatechub2/widgets/app_bar.dart';
@@ -46,6 +47,9 @@ class _TelaAtividadeState extends State<TelaAtividade> {
   Map<String, dynamic>? _entregaAtual;
   bool _carregandoEntrega = true;
 
+  // Escuta a entrega em tempo real (nota/feedback aparecem assim que o professor salva)
+  StreamSubscription<DocumentSnapshot<Map<String, dynamic>>>? _entregaSub;
+
   // Arquivo selecionado pelo aluno
   String? _nomeArquivo;
   Uint8List? _bytesArquivo;
@@ -53,13 +57,37 @@ class _TelaAtividadeState extends State<TelaAtividade> {
   @override
   void initState() {
     super.initState();
-    if (!widget.isProfessor) _carregarEntrega();
+    if (!widget.isProfessor) _assinarEntrega();
   }
 
   @override
   void dispose() {
+    _entregaSub?.cancel();
     _linkController.dispose();
     super.dispose();
+  }
+
+  void _assinarEntrega() {
+    _entregaSub = FirebaseFirestore.instance
+        .collection('turmas')
+        .doc(widget.nomeTurma)
+        .collection('atividades')
+        .doc(widget.atividadeId)
+        .collection('entregas')
+        .doc(_uidAtual)
+        .snapshots()
+        .listen(
+      (doc) {
+        if (!mounted) return;
+        setState(() {
+          _entregaAtual = doc.exists ? doc.data() : null;
+          _carregandoEntrega = false;
+        });
+      },
+      onError: (_) {
+        if (mounted) setState(() => _carregandoEntrega = false);
+      },
+    );
   }
 
   // ─── Carrega entrega do aluno ─────────────────────────────────────────────
@@ -702,6 +730,7 @@ class _TelaAtividadeState extends State<TelaAtividade> {
     final valor = _entregaAtual!['valor'] as String? ?? '';
     final nomeArquivo = _entregaAtual!['nomeArquivo'] as String?;
     final entregueEm = _entregaAtual!['entregueEm'] as Timestamp?;
+    final avaliado = _entregaAtual!['avaliadoEm'] != null;
 
     String horario = '';
     if (entregueEm != null) {
@@ -797,21 +826,179 @@ class _TelaAtividadeState extends State<TelaAtividade> {
 
           const SizedBox(height: 16),
 
-          SizedBox(
-            width: double.infinity,
-            child: OutlinedButton.icon(
-              onPressed: _cancelarEntrega,
-              icon: const Icon(Icons.cancel_outlined, size: 18),
-              label: const Text('Cancelar entrega'),
-              style: OutlinedButton.styleFrom(
-                foregroundColor: const Color(0xFF8B0000),
-                side: const BorderSide(color: Color(0xFF8B0000)),
-                padding: const EdgeInsets.symmetric(vertical: 12),
-                shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(8)),
+          // Nota e feedback do professor
+          _buildAvaliacaoAluno(),
+
+          // Só pode cancelar enquanto não foi avaliada
+          // (cancelar apagaria a nota e o feedback)
+          if (!avaliado) ...[
+            const SizedBox(height: 16),
+            SizedBox(
+              width: double.infinity,
+              child: OutlinedButton.icon(
+                onPressed: _cancelarEntrega,
+                icon: const Icon(Icons.cancel_outlined, size: 18),
+                label: const Text('Cancelar entrega'),
+                style: OutlinedButton.styleFrom(
+                  foregroundColor: const Color(0xFF8B0000),
+                  side: const BorderSide(color: Color(0xFF8B0000)),
+                  padding: const EdgeInsets.symmetric(vertical: 12),
+                  shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(8)),
+                ),
               ),
             ),
+          ],
+        ],
+      ),
+    );
+  }
+
+  // ─── Avaliação do professor (visão do aluno) ──────────────────────────────
+
+  Widget _buildAvaliacaoAluno() {
+    final nota = _entregaAtual!['nota'];
+    final feedback = (_entregaAtual!['feedback'] as String? ?? '').trim();
+    final avaliadoEm = _entregaAtual!['avaliadoEm'] as Timestamp?;
+
+    // Ainda não avaliada
+    if (avaliadoEm == null) {
+      return Container(
+        width: double.infinity,
+        padding: const EdgeInsets.all(12),
+        decoration: BoxDecoration(
+          color: Theme.of(context).colorScheme.surfaceContainerLow,
+          borderRadius: BorderRadius.circular(8),
+        ),
+        child: Row(
+          children: [
+            Icon(
+              Icons.hourglass_empty,
+              size: 18,
+              color: Theme.of(context).colorScheme.onSurfaceVariant,
+            ),
+            const SizedBox(width: 8),
+            Text(
+              'Aguardando avaliação do professor',
+              style: TextStyle(
+                fontSize: 12,
+                color: Theme.of(context).colorScheme.onSurfaceVariant,
+              ),
+            ),
+          ],
+        ),
+      );
+    }
+
+    String? notaTexto;
+    if (nota is num) {
+      notaTexto = nota % 1 == 0 ? nota.toInt().toString() : nota.toStringAsFixed(1);
+    }
+
+    final dt = avaliadoEm.toDate();
+    final dataAvaliacao =
+        '${dt.day.toString().padLeft(2, '0')}/${dt.month.toString().padLeft(2, '0')}/${dt.year}';
+
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: const Color(0xFF8B0000).withValues(alpha: 0.06),
+        borderRadius: BorderRadius.circular(10),
+        border: Border.all(
+          color: const Color(0xFF8B0000).withValues(alpha: 0.25),
+        ),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              const Icon(Icons.grade_outlined,
+                  color: Color(0xFF8B0000), size: 20),
+              const SizedBox(width: 6),
+              Text(
+                'Avaliação do professor',
+                style: TextStyle(
+                  fontSize: 13,
+                  fontWeight: FontWeight.w700,
+                  color: Theme.of(context).colorScheme.onSurface,
+                ),
+              ),
+              const Spacer(),
+              Text(
+                dataAvaliacao,
+                style: TextStyle(
+                  fontSize: 10,
+                  color: Theme.of(context).colorScheme.onSurfaceVariant,
+                ),
+              ),
+            ],
           ),
+
+          // Nota
+          if (notaTexto != null) ...[
+            const SizedBox(height: 12),
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.end,
+              children: [
+                Text(
+                  notaTexto,
+                  style: const TextStyle(
+                    fontSize: 34,
+                    fontWeight: FontWeight.w800,
+                    color: Color(0xFF8B0000),
+                    height: 1,
+                  ),
+                ),
+                const SizedBox(width: 4),
+                Padding(
+                  padding: const EdgeInsets.only(bottom: 4),
+                  child: Text(
+                    '/ 10',
+                    style: TextStyle(
+                      fontSize: 13,
+                      color: Theme.of(context).colorScheme.onSurfaceVariant,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ],
+
+          // Feedback
+          if (feedback.isNotEmpty) ...[
+            const SizedBox(height: 12),
+            Text(
+              'Feedback',
+              style: TextStyle(
+                fontSize: 11,
+                fontWeight: FontWeight.w600,
+                color: Theme.of(context).colorScheme.onSurfaceVariant,
+              ),
+            ),
+            const SizedBox(height: 4),
+            Text(
+              feedback,
+              style: TextStyle(
+                fontSize: 13,
+                height: 1.5,
+                color: Theme.of(context).colorScheme.onSurface,
+              ),
+            ),
+          ],
+
+          // Avaliada sem nota nem comentário
+          if (notaTexto == null && feedback.isEmpty) ...[
+            const SizedBox(height: 8),
+            Text(
+              'O professor revisou sua entrega.',
+              style: TextStyle(
+                fontSize: 12,
+                color: Theme.of(context).colorScheme.onSurfaceVariant,
+              ),
+            ),
+          ],
         ],
       ),
     );
@@ -898,13 +1085,13 @@ class _TelaAtividadeState extends State<TelaAtividade> {
           .doc(uid)
           .get(),
       builder: (context, snapshot) {
-        final data = snapshot.data?.data() as Map<String, dynamic>?;
-        final nomeAluno =
-            (snapshot.connectionState == ConnectionState.done &&
-                snapshot.data != null &&
-                snapshot.data!.exists)
-            ? (data?['nome'] as String?) ?? uid
-            : uid;
+        final dadosAluno = (snapshot.connectionState == ConnectionState.done &&
+          snapshot.data != null &&
+          snapshot.data!.exists)
+        ? snapshot.data!.data() as Map<String, dynamic>?
+        : null;
+
+      final nomeAluno = (dadosAluno?['nome'] as String?) ?? uid;
 
         return GestureDetector(
           onTap: () => _abrirUrl(valor),
