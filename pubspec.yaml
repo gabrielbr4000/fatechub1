@@ -18,12 +18,17 @@ dependencies:
   firebase_core: ^4.15.0
   firebase_storage: ^13.5.0
 
+  file_picker: ^10.3.3
+  url_launcher: ^6.3.3
+
+
   device_preview_plus: ^2.6.1
   get_it: ^9.2.1
   record: ^5.0.0
   audioplayers: ^6.0.0
   path_provider: ^2.0.0
   web: ^1.0.0
+
 
 dev_dependencies:
   flutter_test:
