@@ -62,7 +62,7 @@ Um aplicativo desenvolvido para solucionar a descentralização dos serviços da
 ```
 
 ## Convenções da equipe
-- Branches: `[main]`
+- Branches: `[branch-{gabriel, vinicius}] -> [main]`
 - Commits: `[padrão, ex: Descrição simples da implementação]`
 - Toda PR exige revisão de ao menos 1 integrante antes do merge.
 

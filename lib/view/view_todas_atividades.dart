@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:fatechub2/widgets/app_bar.dart';
+import 'package:fatechub2/view/view_atividadeEntregar.dart';
 
 class TelaTodasAtividadesAluno extends StatefulWidget {
   final String nomeUsuario;
@@ -97,10 +99,13 @@ class _TelaTodasAtividadesAlunoState
             'nome': dados['nome']?.toString() ?? 'Sem título',
             'descricao': dados['descricao']?.toString() ?? '',
             'dataEntrega': dados['dataEntrega'],
-            'entregue': dados['entregue'] == true,
             'disciplina':
                 dados['disciplina']?.toString() ?? disciplina,
             'turma': turma,
+            // Anexos que o professor colocou na atividade
+            'anexos': dados['anexos'] ?? [],
+            // O status "entregue" NÃO vem mais daqui: ele é por aluno
+            // e é consultado em entregas/{uid} (veja _buildStatusAluno).
           });
         }
       }
@@ -273,12 +278,6 @@ class _TelaTodasAtividadesAlunoState
     final String dataEntrega =
         _formatarData(atividade['dataEntrega']);
 
-    final bool entregue =
-        atividade['entregue'] == true;
-
-    final String descricao =
-        atividade['descricao'].toString();
-
     final String disciplina =
         atividade['disciplina'].toString();
 
@@ -294,15 +293,7 @@ class _TelaTodasAtividadesAlunoState
       ),
       color: Theme.of(context).colorScheme.surface,
       child: InkWell(
-        onTap: () {
-          _mostrarDetalhes(
-            nome: nome,
-            dataEntrega: dataEntrega,
-            entregue: entregue,
-            descricao: descricao,
-            disciplina: disciplina,
-          );
-        },
+        onTap: () => _abrirAtividade(atividade, dataEntrega),
         child: Row(
           crossAxisAlignment:
               CrossAxisAlignment.center,
@@ -378,10 +369,65 @@ class _TelaTodasAtividadesAlunoState
               ),
             ),
             const SizedBox(width: 8),
-            _buildStatus(entregue),
+            _buildStatusAluno(
+              atividade['turma'].toString(),
+              atividade['id'].toString(),
+            ),
           ],
         ),
       ),
+    );
+  }
+
+  // ─── Abre a tela da atividade ─────────────────────────────────────────────
+
+  void _abrirAtividade(
+    Map<String, dynamic> atividade,
+    String dataEntrega,
+  ) {
+    final anexos = (atividade['anexos'] as List<dynamic>? ?? [])
+        .map((a) => Map<String, dynamic>.from(a as Map))
+        .toList();
+
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => TelaAtividade(
+          nomeUsuario: widget.nomeUsuario,
+          nomeTurma: atividade['turma'].toString(),
+          atividadeId: atividade['id'].toString(),
+          nome: atividade['nome'].toString(),
+          dataEntrega: dataEntrega,
+          descricao: atividade['descricao'].toString(),
+          disciplina: atividade['disciplina'].toString(),
+          isProfessor: false,
+          anexosProfessor: anexos,
+        ),
+      ),
+    );
+  }
+
+  // ─── Status por aluno ─────────────────────────────────────────────────────
+
+  // Consulta entregas/{uid} da conta logada. Como é um stream, o status
+  // atualiza sozinho quando o aluno volta da tela da atividade.
+  Widget _buildStatusAluno(String turma, String atividadeId) {
+    final uid = FirebaseAuth.instance.currentUser?.uid;
+    if (uid == null) return _buildStatus(false);
+
+    return StreamBuilder<DocumentSnapshot>(
+      stream: FirebaseFirestore.instance
+          .collection('turmas')
+          .doc(turma)
+          .collection('atividades')
+          .doc(atividadeId)
+          .collection('entregas')
+          .doc(uid)
+          .snapshots(),
+      builder: (context, snapshot) {
+        final entregue = snapshot.data?.exists ?? false;
+        return _buildStatus(entregue);
+      },
     );
   }
 
@@ -413,110 +459,6 @@ class _TelaTodasAtividadesAlunoState
           ),
         ),
       ],
-    );
-  }
-
-  void _mostrarDetalhes({
-    required String nome,
-    required String dataEntrega,
-    required bool entregue,
-    required String descricao,
-    required String disciplina,
-  }) {
-    showModalBottomSheet(
-      context: context,
-      backgroundColor:
-          Theme.of(context).colorScheme.surface,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(
-          top: Radius.circular(14),
-        ),
-      ),
-      builder: (context) {
-        return Padding(
-          padding: const EdgeInsets.fromLTRB(
-            18,
-            18,
-            18,
-            25,
-          ),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment:
-                CrossAxisAlignment.start,
-            children: [
-              Text(
-                nome,
-                style: const TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.w700,
-                ),
-              ),
-              const SizedBox(height: 8),
-              Text(
-                disciplina,
-                style: TextStyle(
-                  fontSize: 11,
-                  color: Theme.of(context)
-                      .colorScheme
-                      .onSurfaceVariant,
-                  fontWeight: FontWeight.w500,
-                ),
-              ),
-              const SizedBox(height: 12),
-              Row(
-                children: [
-                  const Icon(
-                    Icons.calendar_today_outlined,
-                    size: 16,
-                  ),
-                  const SizedBox(width: 6),
-                  Text(
-                    'Data de entrega: $dataEntrega',
-                    style: const TextStyle(
-                      fontSize: 12,
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 12),
-              Text(
-                descricao.isEmpty
-                    ? 'Nenhuma descrição informada.'
-                    : descricao,
-                style: const TextStyle(
-                  fontSize: 12,
-                ),
-              ),
-              const SizedBox(height: 16),
-              Row(
-                children: [
-                  Icon(
-                    entregue
-                        ? Icons.check_circle
-                        : Icons.radio_button_unchecked,
-                    size: 18,
-                    color:
-                        entregue ? Colors.green : Colors.grey,
-                  ),
-                  const SizedBox(width: 6),
-                  Text(
-                    entregue
-                        ? 'Atividade entregue'
-                        : 'Atividade não entregue',
-                    style: TextStyle(
-                      fontSize: 11,
-                      fontWeight: FontWeight.w600,
-                      color:
-                          entregue ? Colors.green : Colors.grey,
-                    ),
-                  ),
-                ],
-              ),
-            ],
-          ),
-        );
-      },
     );
   }
 
@@ -564,4 +506,3 @@ class _TelaTodasAtividadesAlunoState
     return DateTime(9999);
   }
 }
-

@@ -1332,22 +1332,27 @@ class _SecaoAcessoRapidoState extends State<_SecaoAcessoRapido> {
     _AcessoItem(
       icone: Icons.schedule_outlined,
       label: 'Horários',
+      url: 'https://horario.fatecrp.edu.br/',
     ),
     _AcessoItem(
       icone: Icons.language_outlined,
       label: 'Site',
+      url: 'https://fatecrp.edu.br/',
     ),
     _AcessoItem(
       icone: Icons.school_outlined,
       label: 'SIGA',
+      url: 'https://siga.cps.sp.gov.br/',
     ),
     _AcessoItem(
       icone: Icons.local_library_outlined,
       label: 'Biblioteca',
+      url: 'https://biblio.cps.sp.gov.br/',
     ),
     _AcessoItem(
       icone: Icons.work_outline,
       label: 'Estágio',
+      url: 'https://fatecrp.cps.sp.gov.br/estagio/',
     ),
     _AcessoItem(
       icone: Icons.record_voice_over_outlined,
@@ -1555,6 +1560,22 @@ class _SecaoAcessoRapidoState extends State<_SecaoAcessoRapido> {
     );
   }
 
+  Future<void> _abrirUrl(String url) async {
+    final uri = Uri.tryParse(url);
+    if (uri == null) return;
+
+    final abriu = await launchUrl(
+      uri,
+      mode: LaunchMode.externalApplication,
+    );
+
+    if (!abriu && mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Não foi possível abrir o link.')),
+      );
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Column(
@@ -1589,6 +1610,14 @@ class _SecaoAcessoRapidoState extends State<_SecaoAcessoRapido> {
               );
             }
 
+            if (item.url != null) {
+              return _CardAcesso(
+                item: item,
+                onTap: () => _abrirUrl(item.url!),
+              );
+            }
+
+
             return _CardAcesso(item: item);
           }).toList(),
         ),
@@ -1600,10 +1629,12 @@ class _SecaoAcessoRapidoState extends State<_SecaoAcessoRapido> {
 class _AcessoItem {
   final IconData icone;
   final String label;
+  final String? url;
 
   const _AcessoItem({
     required this.icone,
     required this.label,
+    this.url,
   });
 }
 
