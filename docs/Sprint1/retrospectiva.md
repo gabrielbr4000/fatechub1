@@ -1,4 +1,4 @@
-# Ata de Retrospectiva — Sprint 2 — FatecHub
+# Ata de Retrospectiva — Sprint 1 — FatecHub
 
 **Data:** 20/09/2026
 **Presentes:** Vinicius Lavraldo de Brito (RA 2840482421023), Gabriel Masson Rosa (RA 2840482421002)

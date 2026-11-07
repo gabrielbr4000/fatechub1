@@ -7,9 +7,9 @@
 | História (E2) | Planejada para esta sprint? | Entregue? | Observação |
 |               |                             |           |            |
 | #1 Enviar audio (correções) | Não | Sim | Funcionando perfeitamente
-| #2 Acesso e resposta do Aluno nas atividades | Sim | Sim (parcial) | Ainda precisa de um refino e alguns consertos, mas funcional |
-| #3 Professor corrigir atividades | Sim | Sim (parcial) | Funcionando, mas ainda precisa passar por testes |
-| #4 Coordenador e a manipulação do calendário academico | Sim | Sim (parcial) | Funcionando, mas ainda precisa passar por testes |
+| #4 Acesso e resposta do Aluno nas atividades | Sim | Sim (parcial) | Ainda precisa de um refino e alguns consertos, mas funcional |
+| #5 Professor corrigir atividades | Sim | Sim (parcial) | Funcionando, mas ainda precisa passar por testes |
+| #6 Coordenador e a manipulação do calendário academico | Sim | Sim (parcial) | Funcionando, mas ainda precisa passar por testes |
 
 ## 2. Incremento funcional demonstrável
 Correções dos bugs anteriores.
@@ -28,12 +28,12 @@ Board: https://docs.google.com/spreadsheets/d/11nLn_qqkQxTMVogq8icIFG1rmNITaizkW
 3 itens foram parcialmente finalizados.
 
 ## 4. Evidências de teste
-2 testes unitários nesta sprint. Detalhe
-completo: `docs/sprint2/evidencias-teste.md`.
+0 testes unitários nesta sprint. Detalhe
+completo: `docs/Sprint2/evidencias-teste.md`.
 
 ## 5. Retrospectiva e contribuição individual
-- Ata de retrospectiva: `docs/sprint2/retrospectiva.md`
-- Relatórios individuais (com nome + RA de cada um): `docs/sprint2/contribuicao-{gabriel,vinicius}.md`
+- Ata de retrospectiva: `docs/Sprint2/retrospectiva.md`
+- Relatórios individuais (com nome + RA de cada um): `docs/Sprint2/contribuicao-{gabriel,vinicius}.md`
 
 ## 6. Riscos/impedimentos para a próxima sprint
 O banco de dados foi bloqueado, verificar possibilidade de ser bloqueado no próximo mês após a liberação para não ocorrer imprevistos como este na sprint 4.

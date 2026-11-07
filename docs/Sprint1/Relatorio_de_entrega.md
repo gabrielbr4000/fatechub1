@@ -19,12 +19,12 @@ Board: https://docs.google.com/spreadsheets/d/11nLn_qqkQxTMVogq8icIFG1rmNITaizkW
 2 itens foram finalizados e 1 foi removido.
 
 ## 4. Evidências de teste
-4 testes unitários nesta sprint. Detalhe
-completo: `docs/sprint1/evidencias-teste.md`.
+3 testes unitários nesta sprint. Detalhe
+completo: `docs/Sprint1/evidencias-teste.md`.
 
 ## 5. Retrospectiva e contribuição individual
-- Ata de retrospectiva: `docs/sprint1/retrospectiva.md`
-- Relatórios individuais (com nome + RA de cada um): `docs/sprint1/contribuicao-{gabriel,vinicius}.md`
+- Ata de retrospectiva: `docs/Sprint1/retrospectiva.md`
+- Relatórios individuais (com nome + RA de cada um): `docs/Sprint1/contribuicao-{gabriel,vinicius}.md`
 
 ## 6. Riscos/impedimentos para a próxima sprint
 Surgiu um bug nos chats ao digitar um caractér no teclado, corrigir esse bug na próxima sprint.
