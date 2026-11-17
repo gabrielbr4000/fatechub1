@@ -2,10 +2,10 @@
 
 | ID | Caso de teste | Tipo | Resultado | Evidência |
 |---|---|---|---|---|
-|   | Enviar posts no mural das turmas | Unitario | Passou |   |
-|   | Interagir com posts no mural das turmas | Unitario | Passou |   |
-|   | Criar uma pasta e subir arquivos na turma | Unitario | Passou |   |
-|   | Baixar o arquivo upado | Unitario | Passou |   |
+|   | Enviar posts no mural das turmas | Integração | Passou |   |
+|   | Interagir com posts no mural das turmas | Integração | Passou |   |
+|   | Criar uma pasta e subir arquivos na turma | Integração | Passou |   |
+|   | Baixar o arquivo upado | Integração | Passou |   |
 
 
 ## Cobertura automatizada nesta sprint
