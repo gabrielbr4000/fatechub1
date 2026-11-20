@@ -8,7 +8,7 @@
 |---|---|---|
 | E1 | Documento de Visão | `docs/documento-de-visao.pdf` |
 | E2 | Backlog + Termo de Aceite do Projeto | [Backlog](https://docs.google.com/spreadsheets/d/11nLn_qqkQxTMVogq8icIFG1rmNITaizkWkvHX0nSWG8/edit?hl=pt-br&gid=0#gid=0), `docs/Termo_de_Aceite_do_Projeto.docx` |
-| E3 | UML + DER + DDL | `docs/FATECHUB_UC.png`, `docs/FATECHUB_CD.png`, `docs/FATEC_HUB_DER.png` |
+| E3 | UML + DER + DDL | `docs/FATECHUB_UC.png`, `docs/FATECHUB_CD.png`, `docs/FATECHUB_DER.png` |
 | E4 | README + Protótipo + Plano de Testes | `README.md`, [Protótipo](https://www.figma.com/design/1YFCvPVJcDTPJgm2zZUh2M/Telas-FatecHub?node-id=0-1&t=9asuOmz5dEopRh8z-1), `docs/plano-de-teste.md` |
 | E5–E8 | Relatórios de sprint | `docs/Sprint{1,2,3,4}/Relatorio_de_entrega.md` |
 | E9 | Relatório de testes + Termo de Aceite do Cliente | `docs/relatorio-de-testes-executados.md`, `docs/termo-aceite-cliente.md` |
