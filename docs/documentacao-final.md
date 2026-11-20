@@ -19,7 +19,8 @@
 | Notificações de novas mensagens | Foi removido | Devido à custeamento do Firebase |
 
 ## 3. Arquitetura final (resumo)
-[Diagrama ou descrição textual das camadas/serviços, se mudou desde a E4]
+A arquitetura final do Fatec Hub utiliza Flutter e Dart no desenvolvimento da aplicação, organizada em Views, Controllers e Services. O Firebase é utilizado como infraestrutura de backend, oferecendo o Firebase Authentication para autenticação dos usuários, Cloud Firestore para armazenamento dos dados e Firebase Storage para arquivos e imagens. A aplicação também utiliza o Firebase Hosting para sua disponibilização pública.
+Em relação à arquitetura inicial, foram implementadas e integradas funcionalidades que utilizam os serviços do Firebase, ampliando o uso do banco de dados e do armazenamento de arquivos.
 
 ## 4. Como contribuir/rodar
 ### Pré-requisitos
