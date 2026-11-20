@@ -7,10 +7,10 @@
 ## Equipe
 | Nome completo | RA | Papéis exercidos (Sprints 1–4) |
 |---|---|---|
-|Vinicius Lavraldo de Brito|2840482421023| |
+|Vinicius Lavraldo de Brito|2840482421023| Responsável por: Perfis de aluno, professor e coordenador; Turmas com disciplinas; Calendário letivo; Mural de novidades |
 |Gabriel Masson Rosa|2840482421002| Responsável por: Prototipagem das telas; funcionalidade de audio; Sistema de atividades; Botões de redirecionamento; Mural do professor; Tela de arquivos |
 
-**Cliente / PO:** Vinicius Lavraldo de Brito · **Trilha:** [A ou B]
+**Cliente / PO:** Vinicius Lavraldo de Brito · **Trilha:** [A]
 
 **Tecnologias:** [Flutter, Dart, Firebase, Git]
 
