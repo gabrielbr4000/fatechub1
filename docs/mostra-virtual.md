@@ -15,7 +15,7 @@
 **Tecnologias:** [Flutter, Dart, Firebase, Git]
 
 ## Links
-- Vídeo: [https://www.youtube.com/watch?v=L_382bZcNzc&feature=youtu.be]
+- Vídeo: [https://www.youtube.com/watch?v=KxFiJeMfpsw]
 - Deploy: [https://fatechub-621ee.firebaseapp.com/]
 - Repositório: [https://github.com/gabrielbr4000/fatechub1]
 
@@ -23,5 +23,5 @@
 - Aprendemos bastante sobre o desenvolvimento por etapas e sobre como a documentação ajuda o projeto a se manter nos trilhos. Mesmo em grandes pausas, conseguimos retomar o processo com excelência da onde paramos, sem nos perder no meio do caminho. Fora a importância de fazermos a integração das funcionalidades desenvolvidas por nós mesmos de forma mais organizada.
 
 ## Imagens enviadas
-- capa.png (1280×720)
-- tela-1.png, tela-2.png, tela-3.png (1920×1080)
+- `/docs/images/fatechub_capa.jpg` (1280×720)
+- `/docs/images/tela_1.jpg`, `/docs/images/tela_2.jpg`, `/docs/images/tela_3.jpg` (1920×1080)
